@@ -1,0 +1,129 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const axios = require('axios');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+app.use(express.json());
+
+// --- 1. THE DATABASE MODELS ---
+const Product = mongoose.model('Product', new mongoose.Schema({
+    name: String,
+    price: Number,
+    grade: { type: String, enum: ['Camera', 'Grade 1', 'Bale'] },
+    image: String,
+    sellerRating: { type: Number, default: 5.0 },
+    isFlashSale: { type: Boolean, default: false }
+}));
+
+const Settings = mongoose.model('Settings', new mongoose.Schema({
+    activeTheme: { type: String, default: 'standard' }, // standard, blackFriday, christmas
+    announcement: String
+}));
+
+// --- 2. THE DYNAMIC THEME ENGINE (The "Cool" Look) ---
+const themes = {
+    standard: { primary: '#dc2626', bg: '#f9fafb', text: 'Gikomba Online' },
+    blackFriday: { primary: '#000000', bg: '#1a1a1a', text: '🔥 BLACK FRIDAY GIKOMBA', accent: '#fbbf24' },
+    christmas: { primary: '#15803d', bg: '#fef2f2', text: '🎄 Krismasi Deals' }
+};
+
+// --- 3. API ENDPOINTS ---
+
+// Get everything for the home page (Products + Current Theme)
+app.get('/api/market', async (req, res) => {
+    const products = await Product.find();
+    const settings = await Settings.findOne() || { activeTheme: 'standard' };
+    res.json({ products, theme: themes[settings.activeTheme] });
+});
+
+// M-Pesa STK Push Trigger
+app.post('/api/checkout', async (req, res) => {
+    const { phone, amount } = req.body;
+    // Note: You'd plug in your Safaricom Daraja credentials here
+    console.log(`Initiating M-Pesa push to ${phone} for Ksh ${amount}`);
+    res.json({ success: true, message: "Check your phone for the M-Pesa PIN prompt!" });
+});
+
+// Admin Toggle for "Black Friday"
+app.post('/api/admin/toggle-theme', async (req, res) => {
+    const { themeName } = req.body;
+    await Settings.findOneAndUpdate({}, { activeTheme: themeName }, { upsert: true });
+    res.json({ success: true, newTheme: themeName });
+});
+
+// --- 4. THE FRONTEND (Simplified React-style UI) ---
+app.get('/', (req, res) => {
+    res.send(`
+    <html>
+        <head>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <title>Online Gikomba</title>
+        </head>
+        <body id="body-bg" class="transition-colors duration-500">
+            <nav id="nav-bar" class="p-4 text-white flex justify-between items-center shadow-lg">
+                <h1 id="logo" class="text-2xl font-black italic"></h1>
+                <div class="space-x-4">
+                    <button onclick="setTheme('blackFriday')" class="text-xs bg-yellow-400 text-black px-2 py-1 rounded">BF Mode</button>
+                    <button onclick="setTheme('standard')" class="text-xs bg-white text-black px-2 py-1 rounded">Reset</button>
+                </div>
+            </nav>
+
+            <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6" id="product-grid">
+                </div>
+
+            <script>
+                async function loadMarket() {
+                    const res = await fetch('/api/market');
+                    const data = await res.json();
+                    
+                    // Apply Theme
+                    document.getElementById('nav-bar').style.backgroundColor = data.theme.primary;
+                    document.getElementById('body-bg').style.backgroundColor = data.theme.bg;
+                    document.getElementById('logo').innerText = data.theme.text;
+
+                    // Load Products
+                    const grid = document.getElementById('product-grid');
+                    grid.innerHTML = data.products.map(p => \`
+                        <div class="bg-white p-4 rounded-xl shadow-md border-2 hover:border-red-500 transition">
+                            <img src="\${p.image}" class="h-40 w-full object-cover rounded-md">
+                            <div class="flex justify-between mt-2">
+                                <span class="text-xs font-bold text-red-500 uppercase">\${p.grade}</span>
+                                <span class="text-xs">⭐ \${p.sellerRating}</span>
+                            </div>
+                            <h2 class="font-bold text-lg text-gray-800">\${p.name}</h2>
+                            <p class="text-xl font-black">Ksh \${p.price}</p>
+                            <button onclick="buy('\${p.price}')" class="w-full mt-3 bg-green-600 text-white py-2 rounded-lg font-bold">Buy Now</button>
+                        </div>
+                    \`).join('');
+                }
+
+                async function setTheme(name) {
+                    await fetch('/api/admin/toggle-theme', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ themeName: name })
+                    });
+                    loadMarket();
+                }
+
+                function buy(amt) {
+                    const phone = prompt("Enter your M-Pesa number (254...):");
+                    if(phone) fetch('/api/checkout', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ phone, amount: amt })
+                    }).then(r => alert("STK Push Sent!"));
+                }
+
+                loadMarket();
+            </script>
+        </body>
+    </html>
+    `);
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(\`Gikomba Online running on http://localhost:\${PORT}\`));
+this is my code I need you to create a folder for it call it online gikomba
