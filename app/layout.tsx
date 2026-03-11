@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { DM_Sans, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AuthProvider } from '@/lib/auth-context'
+import { CartProvider } from '@/lib/cart-context'
 import './globals.css'
 
 const dmSans = DM_Sans({ 
@@ -44,7 +46,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${dmSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
-        {children}
+        <AuthProvider>
+          <CartProvider>
+            {children}
+          </CartProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

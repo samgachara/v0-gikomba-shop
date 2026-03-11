@@ -1,20 +1,29 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
-import { ShoppingBag, Search, Menu, X, User, Heart } from "lucide-react"
+import { ShoppingBag, Search, Menu, User, Heart, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/lib/auth-context"
+import { useCart } from "@/lib/cart-context"
 
 const navigation = [
-  { name: "Shop", href: "#shop" },
-  { name: "New Arrivals", href: "#new" },
+  { name: "Shop", href: "/shop" },
+  { name: "New Arrivals", href: "/shop?filter=new" },
   { name: "Categories", href: "#categories" },
   { name: "About", href: "#about" },
 ]
 
 export function Header() {
-  const [cartCount] = useState(0)
+  const { user, loading, signOut } = useAuth()
+  const { cartCount, wishlistCount } = useCart()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -45,26 +54,69 @@ export function Header() {
 
           {/* Right Section */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Search className="h-5 w-5" />
-              <span className="sr-only">Search</span>
+            <Button variant="ghost" size="icon" className="hidden sm:flex" asChild>
+              <Link href="/shop">
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Search</span>
+              </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Heart className="h-5 w-5" />
-              <span className="sr-only">Wishlist</span>
+            
+            <Button variant="ghost" size="icon" className="hidden sm:flex relative" asChild>
+              <Link href="/wishlist">
+                <Heart className="h-5 w-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs text-accent-foreground">
+                    {wishlistCount}
+                  </span>
+                )}
+                <span className="sr-only">Wishlist</span>
+              </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <User className="h-5 w-5" />
-              <span className="sr-only">Account</span>
-            </Button>
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingBag className="h-5 w-5" />
-              {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                  {cartCount}
-                </span>
-              )}
-              <span className="sr-only">Cart</span>
+
+            {/* User Menu */}
+            {!loading && (
+              user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="hidden sm:flex">
+                      <User className="h-5 w-5" />
+                      <span className="sr-only">Account</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link href="/account">My Account</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/account/orders">My Orders</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut} className="text-destructive">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button variant="ghost" size="icon" className="hidden sm:flex" asChild>
+                  <Link href="/auth/login">
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">Sign In</span>
+                  </Link>
+                </Button>
+              )
+            )}
+
+            <Button variant="ghost" size="icon" className="relative" asChild>
+              <Link href="/cart">
+                <ShoppingBag className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                    {cartCount}
+                  </span>
+                )}
+                <span className="sr-only">Cart</span>
+              </Link>
             </Button>
 
             {/* Mobile Menu */}
@@ -95,14 +147,44 @@ export function Header() {
                     ))}
                   </nav>
                   <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                    <Button variant="outline" className="w-full justify-start gap-2">
-                      <User className="h-4 w-4" />
-                      Sign In
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start gap-2">
-                      <Heart className="h-4 w-4" />
-                      Wishlist
-                    </Button>
+                    {user ? (
+                      <>
+                        <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                          <Link href="/account">
+                            <User className="h-4 w-4" />
+                            My Account
+                          </Link>
+                        </Button>
+                        <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                          <Link href="/wishlist">
+                            <Heart className="h-4 w-4" />
+                            Wishlist ({wishlistCount})
+                          </Link>
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-2 text-destructive" 
+                          onClick={signOut}
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sign Out
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                          <Link href="/auth/login">
+                            <User className="h-4 w-4" />
+                            Sign In
+                          </Link>
+                        </Button>
+                        <Button className="w-full justify-start gap-2" asChild>
+                          <Link href="/auth/sign-up">
+                            Create Account
+                          </Link>
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </SheetContent>
