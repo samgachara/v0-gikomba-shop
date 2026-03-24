@@ -5,7 +5,7 @@
     "dev": "npm --prefix \"v0 backend\" run dev",
     "build": "npm --prefix \"v0 backend\" run build",
     "start": "npm --prefix \"v0 backend\" run start",
-    "vercel-build": "npm --prefix \"v0 backend\" install && npm --prefix \"v0 backend\" run build"
+    "vercel-build": "npm --prefix \"v0 backend\" install --include=dev && npm --prefix \"v0 backend\" run build"
   },
   "dependencies": {
     "next": "16.1.6"
