@@ -1,11 +1,9 @@
-// next.config.mjs
 /** @type {import("next").NextConfig} */
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
-    // unoptimized: true, // Remove this line to enable Next.js Image Optimization
     remotePatterns: [
       {
         protocol: 'https',
@@ -20,6 +18,14 @@ const nextConfig = {
         hostname: 'res.cloudinary.com',
       },
     ],
+  },
+  experimental: {
+    isrMemoryCacheSize: 0,
+    ppr: false,
+  },
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000,
+    pagesBufferLength: 5,
   },
 }
 
