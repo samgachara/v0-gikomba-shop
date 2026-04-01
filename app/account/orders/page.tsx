@@ -15,7 +15,7 @@ import type { Order, ApiResponse } from "@/lib/types"
 
 // Update fetcher to correctly unwrap the ApiResponse
 const fetcher = (url: string) => fetch(url).then(async res => {
-  if (res.status === 401) return { success: false, error: "Unauthorized" } as ApiResponse<Order[]>;
+  if (res.status === 401) return { success: false, error: "Unauthorized", data: [] } as ApiResponse<Order[]>;
   const json = await res.json();
   if (!res.ok) {
     throw new Error(json.error || "An error occurred");
@@ -165,7 +165,7 @@ export default function OrdersPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {order.order_items?.map((item) => (
+                        {order.items?.map((item) => (
                           <div key={item.id} className="flex items-center gap-3">
                             <div className="h-12 w-12 rounded bg-muted overflow-hidden">
                               <img
@@ -177,7 +177,7 @@ export default function OrdersPage() {
                             <div className="flex-1">
                               <p className="text-sm font-medium">{item.product?.name}</p>
                               <p className="text-xs text-muted-foreground">
-                                Qty: {item.quantity} x {formatPrice(item.price )}
+                                Qty: {item.quantity} x {formatPrice(item.price)}
                               </p>
                             </div>
                           </div>
