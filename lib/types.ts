@@ -1,3 +1,9 @@
+export interface ApiResponse<T> {
+  data: T
+  success: boolean
+  message?: string
+}
+
 export interface Product {
   id: string
   name: string
@@ -22,7 +28,7 @@ export interface Profile {
   phone: string | null
   address: string | null
   city: string | null
-  role: 'buyer' | 'seller'   // ← added
+  role: 'buyer' | 'seller'
   created_at: string
   updated_at: string
 }
