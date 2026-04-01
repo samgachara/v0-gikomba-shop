@@ -25,6 +25,7 @@ export default function SignUpPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [needsVerification, setNeedsVerification] = useState(false)
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false) // ADDED THIS LINE
   const router = useRouter()
 
   const passwordRequirements = [
