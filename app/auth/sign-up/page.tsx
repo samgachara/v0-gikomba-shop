@@ -13,6 +13,8 @@ import { AlertCircle, Loader2, ShoppingBag, Check, X, MailCheck } from 'lucide-r
 import { cn } from '@/lib/utils'
 import { signUpSchema, passwordSchema, normalizeAuthError } from '@/lib/validators/auth'
 import { ZodError } from 'zod'
+import { FcGoogle } from 'react-icons/fc'
+import { FaGithub } from 'react-icons/fa'
 
 export default function SignUpPage() {
   const [firstName, setFirstName] = useState('')
@@ -24,8 +26,9 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null)
   const [needsVerification, setNeedsVerification] = useState(false)
-  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false) // ADDED THIS LINE
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
   const router = useRouter()
 
   const passwordRequirements = [
@@ -105,6 +108,25 @@ export default function SignUpPage() {
     setLoading(false)
   }
 
+  const handleOAuthSignUp = async (provider: 'google' | 'github') => {
+    setOauthLoading(provider)
+    setError(null)
+    const supabase = createClient()
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+
+    if (authError) {
+      setError(authError.message)
+      setOauthLoading(null)
+    }
+  }
+
+  const isAnyLoading = loading || oauthLoading !== null
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
@@ -137,6 +159,46 @@ export default function SignUpPage() {
               {error}
             </div>
           )}
+
+          {/* OAuth Quick Sign-Up */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthSignUp('google')}
+              disabled={isAnyLoading}
+            >
+              {oauthLoading === 'google' ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FcGoogle className="mr-2 h-4 w-4" />
+              )}
+              Google
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthSignUp('github')}
+              disabled={isAnyLoading}
+            >
+              {oauthLoading === 'github' ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FaGithub className="mr-2 h-4 w-4" />
+              )}
+              GitHub
+            </Button>
+          </div>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or sign up with email
+              </span>
+            </div>
+          </div>
+
           <form onSubmit={handleSignUp} className="space-y-4" noValidate>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -148,6 +210,7 @@ export default function SignUpPage() {
                   onChange={(e) => setFirstName(e.target.value)}
                   aria-invalid={!!fieldErrors.firstName}
                   autoComplete="given-name"
+                  disabled={isAnyLoading}
                 />
                 {fieldErrors.firstName && (
                   <p className="text-xs text-destructive mt-1">{fieldErrors.firstName}</p>
@@ -162,6 +225,7 @@ export default function SignUpPage() {
                   onChange={(e) => setLastName(e.target.value)}
                   aria-invalid={!!fieldErrors.lastName}
                   autoComplete="family-name"
+                  disabled={isAnyLoading}
                 />
                 {fieldErrors.lastName && (
                   <p className="text-xs text-destructive mt-1">{fieldErrors.lastName}</p>
@@ -179,10 +243,11 @@ export default function SignUpPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 aria-invalid={!!fieldErrors.email}
                 autoComplete="email"
+                disabled={isAnyLoading}
               />
               {fieldErrors.email && (
                 <p className="text-xs text-destructive mt-1">{fieldErrors.email}</p>
-                )}
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone number</Label>
@@ -194,6 +259,7 @@ export default function SignUpPage() {
                 onChange={(e) => setPhone(e.target.value)}
                 aria-invalid={!!fieldErrors.phone}
                 autoComplete="tel"
+                disabled={isAnyLoading}
               />
               {fieldErrors.phone && (
                 <p className="text-xs text-destructive mt-1">{fieldErrors.phone}</p>
@@ -212,6 +278,7 @@ export default function SignUpPage() {
                 onFocus={() => setShowPasswordRequirements(true)}
                 aria-invalid={!!fieldErrors.password}
                 autoComplete="new-password"
+                disabled={isAnyLoading}
               />
               {fieldErrors.password && (
                 <p className="text-xs text-destructive mt-1">{fieldErrors.password}</p>
@@ -250,6 +317,7 @@ export default function SignUpPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 aria-invalid={!passwordsMatch && confirmPassword !== ''}
                 autoComplete="new-password"
+                disabled={isAnyLoading}
               />
               {confirmPassword.length > 0 && (
                 <p className={cn(
@@ -260,10 +328,10 @@ export default function SignUpPage() {
                 </p>
               )}
             </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={loading || !isPasswordValid || !passwordsMatch}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isAnyLoading || !isPasswordValid || !passwordsMatch}
             >
               {loading ? (
                 <>

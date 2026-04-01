@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertCircle, Loader2, ShoppingBag, MailCheck } from 'lucide-react'
 import { loginSchema, normalizeAuthError } from '@/lib/validators/auth'
-import { FcGoogle } from "react-icons/fc";
+import { FcGoogle } from 'react-icons/fc'
+import { FaGithub } from 'react-icons/fa'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null)
   const [needsVerification, setNeedsVerification] = useState(false)
   const router = useRouter()
 
@@ -65,22 +67,24 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError(null);
-    const supabase = createClient();
+  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+    setOauthLoading(provider)
+    setError(null)
+    const supabase = createClient()
     const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
-    });
+    })
 
     if (authError) {
-      setError(authError.message);
-      setLoading(false);
+      setError(authError.message)
+      setOauthLoading(null)
     }
-  };
+  }
+
+  const isAnyLoading = loading || oauthLoading !== null
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -114,6 +118,46 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+
+          {/* OAuth Buttons */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthLogin('google')}
+              disabled={isAnyLoading}
+            >
+              {oauthLoading === 'google' ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FcGoogle className="mr-2 h-4 w-4" />
+              )}
+              Google
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthLogin('github')}
+              disabled={isAnyLoading}
+            >
+              {oauthLoading === 'github' ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FaGithub className="mr-2 h-4 w-4" />
+              )}
+              GitHub
+            </Button>
+          </div>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or sign in with email
+              </span>
+            </div>
+          </div>
+
           <form onSubmit={handleLogin} className="space-y-4" noValidate>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -125,6 +169,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 aria-invalid={!!fieldErrors.email}
                 autoComplete="email"
+                disabled={isAnyLoading}
               />
               {fieldErrors.email && (
                 <p className="text-xs text-destructive mt-1">{fieldErrors.email}</p>
@@ -148,12 +193,13 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 aria-invalid={!!fieldErrors.password}
                 autoComplete="current-password"
+                disabled={isAnyLoading}
               />
               {fieldErrors.password && (
                 <p className="text-xs text-destructive mt-1">{fieldErrors.password}</p>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={isAnyLoading}>
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -164,31 +210,6 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-
-          <div className="relative mt-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full mt-6"
-            onClick={handleGoogleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <FcGoogle className="mr-2 h-4 w-4" />
-            )}
-            Google
-          </Button>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}

@@ -17,10 +17,19 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
       },
+      {
+        // GitHub avatar images
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        // Google profile pictures
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
     ],
   },
   experimental: {
-    isrMemoryCacheSize: 0,
     ppr: false,
   },
   onDemandEntries: {

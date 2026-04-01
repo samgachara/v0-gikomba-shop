@@ -4,10 +4,9 @@ import { NextResponse } from 'next/server'
 function sanitizeRedirectPath(next: string | null): string {
   if (!next) return '/'
   try {
-    // Ensure the redirect path is relative and safe
     if (next.startsWith('http') || next.startsWith('//') || !next.startsWith('/')) return '/'
-    const url = new URL(next, 'https://placeholder.internal') // Use a dummy base URL for parsing
-    if (url.host !== 'placeholder.internal') return '/' // Should not be an external URL
+    const url = new URL(next, 'https://placeholder.internal')
+    if (url.host !== 'placeholder.internal') return '/'
     return url.pathname + url.search
   } catch (e) {
     console.error('Error sanitizing redirect path:', e)
@@ -27,21 +26,38 @@ export async function GET(request: Request) {
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        // Upsert profile data, ensuring a default role for new users
+        // Extract display name from metadata — works for Google, GitHub, and email sign-ups
+        const meta = user.user_metadata ?? {}
+
+        // GitHub uses 'user_name' and 'full_name'; Google uses 'given_name'/'family_name'
+        let firstName = meta.first_name ?? meta.given_name ?? null
+        let lastName = meta.last_name ?? meta.family_name ?? null
+
+        // For GitHub: full_name might be "Sam Gachara" — split it
+        if (!firstName && meta.full_name) {
+          const parts = (meta.full_name as string).trim().split(/\s+/)
+          firstName = parts[0] ?? null
+          lastName = parts.slice(1).join(' ') || null
+        }
+
+        // GitHub avatar URL
+        const avatarUrl = meta.avatar_url ?? null
+
         const { error: profileError } = await supabase.from('profiles').upsert(
           {
             id: user.id,
-            first_name: user.user_metadata?.first_name ?? null,
-            last_name: user.user_metadata?.last_name ?? null,
-            phone: user.user_metadata?.phone ?? null,
-            // Set default role to 'buyer' if not already set or provided by OAuth
-            role: user.user_metadata?.role ?? 'buyer',
+            first_name: firstName,
+            last_name: lastName,
+            phone: meta.phone ?? null,
+            avatar_url: avatarUrl,
+            // Set default role to 'buyer' if not already set
+            role: meta.role ?? 'buyer',
           },
-          { onConflict: 'id' }, // Update if user exists, insert if new
+          { onConflict: 'id' },
         )
+
         if (profileError) {
           console.error('[auth/callback] Profile upsert failed:', profileError.message)
-          // Optionally redirect to an error page or show a message
           return NextResponse.redirect(`${origin}/auth/error?message=Profile setup failed`)
         }
       }
@@ -49,6 +65,5 @@ export async function GET(request: Request) {
     }
   }
 
-  // If code is missing or exchange fails, redirect to auth error page
   return NextResponse.redirect(`${origin}/auth/error?message=Authentication failed`)
 }

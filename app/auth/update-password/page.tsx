@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Loader2, ShoppingBag, Check, X } from 'lucide-react'
+import { AlertCircle, Loader2, ShoppingBag, Check, X, MailCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { passwordSchema } from '@/lib/validators/auth'
 import { ZodError } from 'zod'
@@ -30,12 +30,12 @@ export default function UpdatePasswordPage() {
     { id: 5, label: 'At least one special character', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
   ]
 
-  const isPasswordValid = useMemo(() => 
+  const isPasswordValid = useMemo(() =>
     passwordRequirements.every(req => req.test(password)),
     [password]
   )
 
-  const passwordsMatch = useMemo(() => 
+  const passwordsMatch = useMemo(() =>
     password === confirmPassword && confirmPassword !== '',
     [password, confirmPassword]
   )
@@ -76,7 +76,9 @@ export default function UpdatePasswordPage() {
 
     setSuccess(true)
     setLoading(false)
-    router.push('/auth/login?message=Password updated successfully! Please log in.')
+    setTimeout(() => {
+      router.push('/auth/login?message=Password updated successfully! Please log in.')
+    }, 2000)
   }
 
   return (
@@ -169,7 +171,11 @@ export default function UpdatePasswordPage() {
                 </p>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={loading || success}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || success || !isPasswordValid || !passwordsMatch}
+            >
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
