@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     .from('orders')
     .select('id, total, payment_status, payment_method')
     .eq('id', result.data.order_id)
-    .eq('user_id', user.id)
+    .eq('buyer_id', user.id)
     .single()
 
   if (orderError || !order) return apiError('Order not found', 404)

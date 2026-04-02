@@ -63,6 +63,13 @@ export function Header() {
                 Seller Dashboard
               </Link>
             )}
+            {userRole === 'admin' && (
+              <Link href="/dashboard/admin"
+                className="text-sm font-medium text-violet-600 dark:text-violet-400 transition-colors hover:text-violet-700 flex items-center gap-1">
+                <LayoutDashboard className="h-4 w-4" />
+                Admin Panel
+              </Link>
+            )}
           </nav>
 
           {/* Right */}
@@ -98,6 +105,17 @@ export function Header() {
                           <Link href="/dashboard/seller" className="flex items-center gap-2">
                             <LayoutDashboard className="h-4 w-4" />
                             Seller Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    {userRole === 'admin' && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link href="/dashboard/admin" className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
+                            <LayoutDashboard className="h-4 w-4" />
+                            Admin Panel
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -166,6 +184,13 @@ export function Header() {
                           <Button variant="outline" className="w-full justify-start gap-2" asChild>
                             <Link href="/dashboard/seller">
                               <LayoutDashboard className="h-4 w-4" />Seller Dashboard
+                            </Link>
+                          </Button>
+                        )}
+                        {userRole === 'admin' && (
+                          <Button variant="outline" className="w-full justify-start gap-2 text-violet-600 dark:text-violet-400 border-violet-200" asChild>
+                            <Link href="/dashboard/admin">
+                              <LayoutDashboard className="h-4 w-4" />Admin Panel
                             </Link>
                           </Button>
                         )}
