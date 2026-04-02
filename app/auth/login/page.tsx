@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertCircle, Loader2, ShoppingBag, MailCheck } from 'lucide-react'
 import { loginSchema, normalizeAuthError } from '@/lib/validators/auth'
 import { FcGoogle } from 'react-icons/fc'
-import { FaGithub } from 'react-icons/fa'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -19,9 +18,22 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
-  const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [needsVerification, setNeedsVerification] = useState(false)
   const router = useRouter()
+
+  const redirectByRole = async (supabase: ReturnType<typeof createClient>) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .single()
+    if (profile?.role === 'seller') {
+      router.push('/dashboard/seller')
+    } else {
+      router.push('/')
+    }
+    router.refresh()
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,13 +53,11 @@ export default function LoginPage() {
 
     setLoading(true)
     const supabase = createClient()
-
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: result.data.email,
         password: result.data.password,
       })
-
       if (authError) {
         setLoading(false)
         if (authError.message.toLowerCase().includes('email not confirmed')) {
@@ -57,34 +67,25 @@ export default function LoginPage() {
         setError(normalizeAuthError(authError))
         return
       }
-
-      router.push('/')
-      router.refresh()
-    } catch (err) {
-      console.error('[login] Unexpected error:', err)
+      await redirectByRole(supabase)
+    } catch {
       setError('An unexpected error occurred. Please try again.')
       setLoading(false)
     }
   }
 
-  const handleOAuthLogin = async (provider: 'google' | 'github') => {
-    setOauthLoading(provider)
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true)
     setError(null)
     const supabase = createClient()
     const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
-
-    if (authError) {
-      setError(authError.message)
-      setOauthLoading(null)
-    }
+    if (authError) { setError(authError.message); setGoogleLoading(false) }
   }
 
-  const isAnyLoading = loading || oauthLoading !== null
+  const isAnyLoading = loading || googleLoading
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -97,7 +98,7 @@ export default function LoginPage() {
             <span className="text-2xl font-bold text-foreground">gikomba.shop</span>
           </Link>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your account to continue shopping</CardDescription>
+          <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>
           {needsVerification && (
@@ -106,8 +107,7 @@ export default function LoginPage() {
               <div>
                 <p className="font-medium">Please verify your email</p>
                 <p className="mt-1 text-blue-700">
-                  We sent a confirmation link to <strong>{email}</strong>. Check your inbox
-                  (and spam folder) and click the link before signing in.
+                  We sent a confirmation link to <strong>{email}</strong>. Check your inbox and click the link before signing in.
                 </p>
               </div>
             </div>
@@ -119,103 +119,48 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* OAuth Buttons */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <Button
-              variant="outline"
-              onClick={() => handleOAuthLogin('google')}
-              disabled={isAnyLoading}
-            >
-              {oauthLoading === 'google' ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <FcGoogle className="mr-2 h-4 w-4" />
-              )}
-              Google
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleOAuthLogin('github')}
-              disabled={isAnyLoading}
-            >
-              {oauthLoading === 'github' ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <FaGithub className="mr-2 h-4 w-4" />
-              )}
-              GitHub
-            </Button>
-          </div>
+          <Button variant="outline" className="w-full mb-4" onClick={handleGoogleLogin} disabled={isAnyLoading}>
+            {googleLoading
+              ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              : <FcGoogle className="mr-2 h-4 w-4" />}
+            Continue with Google
+          </Button>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
+          <div className="relative mb-4">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or sign in with email
-              </span>
+              <span className="bg-background px-2 text-muted-foreground">Or sign in with email</span>
             </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4" noValidate>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
+              <Input id="email" type="email" placeholder="you@example.com" value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                aria-invalid={!!fieldErrors.email}
-                autoComplete="email"
-                disabled={isAnyLoading}
-              />
-              {fieldErrors.email && (
-                <p className="text-xs text-destructive mt-1">{fieldErrors.email}</p>
-              )}
+                aria-invalid={!!fieldErrors.email} autoComplete="email" disabled={isAnyLoading} />
+              {fieldErrors.email && <p className="text-xs text-destructive mt-1">{fieldErrors.email}</p>}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-sm font-medium text-primary hover:underline"
-                >
+                <Link href="/auth/forgot-password" className="text-sm font-medium text-primary hover:underline">
                   Forgot password?
                 </Link>
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Your password"
-                value={password}
+              <Input id="password" type="password" placeholder="Your password" value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                aria-invalid={!!fieldErrors.password}
-                autoComplete="current-password"
-                disabled={isAnyLoading}
-              />
-              {fieldErrors.password && (
-                <p className="text-xs text-destructive mt-1">{fieldErrors.password}</p>
-              )}
+                aria-invalid={!!fieldErrors.password} autoComplete="current-password" disabled={isAnyLoading} />
+              {fieldErrors.password && <p className="text-xs text-destructive mt-1">{fieldErrors.password}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={isAnyLoading}>
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign in'
-              )}
+              {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing in...</> : 'Sign in'}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/sign-up" className="text-primary hover:underline font-medium">
-              Sign up
-            </Link>
+            <Link href="/auth/sign-up" className="text-primary hover:underline font-medium">Sign up</Link>
           </div>
         </CardContent>
       </Card>
