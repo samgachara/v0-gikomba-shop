@@ -21,26 +21,21 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Verify seller role
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'seller') {
+  if (!['seller', 'admin'].includes(profile?.role ?? '')) {
     return NextResponse.json({ error: 'Only sellers can add products' }, { status: 403 })
   }
 
   const body = await request.json()
   const { name, description, price, original_price, category, stock, image_url } = body
 
-  // Validation
-  if (!name || !price || !category || !stock) {
-    return NextResponse.json(
-      { error: 'Name, price, category and stock are required' },
-      { status: 400 }
-    )
+  if (!name?.trim() || !price || !category || stock === undefined) {
+    return NextResponse.json({ error: 'Name, price, category and stock are required' }, { status: 400 })
   }
   if (isNaN(Number(price)) || Number(price) <= 0) {
     return NextResponse.json({ error: 'Price must be a positive number' }, { status: 400 })
@@ -52,7 +47,8 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from('products')
     .insert({
-      name:           name.trim(),
+      title:          name.trim(),   // canonical field
+      name:           name.trim(),   // kept in sync via trigger
       description:    description?.trim() || null,
       price:          Number(price),
       original_price: original_price ? Number(original_price) : null,
@@ -62,8 +58,10 @@ export async function POST(request: Request) {
       seller_id:      user.id,
       is_new:         true,
       is_featured:    false,
+      is_active:      true,
       rating:         0,
       review_count:   0,
+      num_reviews:    0,
     })
     .select()
     .single()
