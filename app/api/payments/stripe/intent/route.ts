@@ -1,11 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { z } from 'zod'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
-})
+// Lazy-load Stripe — only instantiate when the route is actually called,
+// NOT at module evaluation time (which runs during build and has no env vars)
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) {
+    throw new Error('STRIPE_SECRET_KEY environment variable is not configured')
+  }
+  // Dynamic require avoids top-level instantiation crash at build
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const Stripe = require('stripe')
+  return new Stripe(key, { apiVersion: '2024-12-18.acacia' })
+}
 
 const schema = z.object({
   order_id: z.string().uuid('Invalid order ID'),
@@ -18,7 +26,6 @@ function apiError(message: string, status: number) {
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) return apiError('Unauthorized', 401)
 
   let body: unknown
@@ -31,7 +38,6 @@ export async function POST(request: Request) {
   const result = schema.safeParse(body)
   if (!result.success) return apiError(result.error.errors[0].message, 400)
 
-  // Fetch the order — verify it belongs to this user and is still pending
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .select('id, total, payment_status, payment_method')
@@ -43,18 +49,19 @@ export async function POST(request: Request) {
   if (order.payment_method !== 'card') return apiError('Order is not a card payment', 400)
   if (order.payment_status === 'completed') return apiError('Order already paid', 400)
 
-  // Create Stripe PaymentIntent — amount in smallest currency unit (KES cents = fils)
-  // KES does not have subunits so amount is in whole KES
+  let stripe
+  try {
+    stripe = getStripe()
+  } catch {
+    return apiError('Stripe payments are not configured on this server', 503)
+  }
+
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(order.total * 100), // Stripe uses cents
+    amount: Math.round(Number(order.total) * 100),
     currency: 'kes',
-    metadata: {
-      order_id: order.id,
-      buyer_id: user.id,
-    },
+    metadata: { order_id: order.id, buyer_id: user.id },
   })
 
-  // Store the PaymentIntent ID on the order so the webhook can match it
   await supabase
     .from('orders')
     .update({ stripe_payment_intent_id: paymentIntent.id })
