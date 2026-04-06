@@ -11,16 +11,16 @@ import { Header } from '@/components/header'
 import { useCart } from '@/lib/cart-context'
 import { useAuth } from '@/lib/auth-context'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 
 export default function ProductDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { addItem } = useCart()
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
   const { user } = useAuth()
   const [product, setProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
-  const [wishlist, setWishlist] = useState<string[]>([])
 
   useEffect(() => {
     async function fetchProduct() {
@@ -42,14 +42,36 @@ export default function ProductDetailPage() {
     if (id) fetchProduct()
   }, [id, router])
 
+  const inStock = product ? (product.stock ?? 1) > 0 : false
+  const lowStock = inStock && (product?.stock ?? 99) <= 5
+  const inWishlist = product ? isInWishlist(product.id) : false
+
   const handleAddToCart = async () => {
     if (!user) {
-      router.push('/auth/login')
+      toast.error('Please sign in to add items to your cart', {
+        action: {
+          label: 'Sign In',
+          onClick: () => router.push('/auth/login'),
+        },
+      })
       return
     }
     setAdding(true)
-    await addItem(product.id, 1)
+    await addToCart(product.id)
     setAdding(false)
+  }
+
+  const handleToggleWishlist = async () => {
+    if (!user) {
+      toast.error('Please sign in to save items', {
+        action: {
+          label: 'Sign In',
+          onClick: () => router.push('/auth/login'),
+        },
+      })
+      return
+    }
+    inWishlist ? await removeFromWishlist(product.id) : await addToWishlist(product.id)
   }
 
   if (loading) {
@@ -61,13 +83,16 @@ export default function ProductDetailPage() {
   }
 
   const formatPrice = (p: number) => `KSh ${p.toLocaleString()}`
+  const discount = product.original_price && product.original_price > product.price
+    ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
+    : null
 
   return (
     <>
       <Header />
       <main className="pt-24 pb-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <button 
+          <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors"
           >
@@ -75,7 +100,7 @@ export default function ProductDetailPage() {
           </button>
 
           <div className="lg:grid lg:grid-cols-2 lg:gap-x-12">
-            {/* Image gallery */}
+            {/* Image */}
             <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted border border-border">
               <Image
                 src={product.image_url || 'https://via.placeholder.com/800x800'}
@@ -83,11 +108,14 @@ export default function ProductDetailPage() {
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="h-full w-full object-cover"
+                className={cn('h-full w-full object-cover', !inStock && 'opacity-60 grayscale')}
               />
-              {product.is_new && (
-                <Badge className="absolute top-4 left-4 bg-accent text-accent-foreground">New Arrival</Badge>
-              )}
+              <div className="absolute top-4 left-4 flex flex-col gap-2">
+                {!inStock && <Badge className="bg-gray-600 text-white">Out of Stock</Badge>}
+                {inStock && lowStock && <Badge className="bg-orange-500 text-white">Only {product.stock} left!</Badge>}
+                {inStock && !lowStock && product.is_new && <Badge className="bg-accent text-accent-foreground">New Arrival</Badge>}
+                {discount && <Badge className="bg-primary text-primary-foreground">{discount}% Off</Badge>}
+              </div>
             </div>
 
             {/* Product info */}
@@ -97,12 +125,12 @@ export default function ProductDetailPage() {
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
+                      <Star
+                        key={i}
                         className={cn(
-                          "h-4 w-4",
-                          i < Math.floor(product.rating || 4.5) ? "fill-primary text-primary" : "text-muted"
-                        )} 
+                          'h-4 w-4',
+                          i < Math.floor(product.rating || 4.5) ? 'fill-primary text-primary' : 'text-muted'
+                        )}
                       />
                     ))}
                     <span className="ml-2 text-sm text-muted-foreground">
@@ -114,36 +142,44 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="mt-6">
-                <h2 className="sr-only">Product information</h2>
                 <div className="flex items-baseline gap-4">
                   <p className="text-3xl font-bold text-foreground">{formatPrice(product.price)}</p>
                   {product.original_price && (
-                    <p className="text-xl text-muted-foreground line-through">
-                      {formatPrice(product.original_price)}
-                    </p>
+                    <p className="text-xl text-muted-foreground line-through">{formatPrice(product.original_price)}</p>
                   )}
                 </div>
               </div>
 
               <div className="mt-6">
-                <h3 className="sr-only">Description</h3>
-                <p className="text-base text-muted-foreground leading-relaxed">
-                  {product.description}
-                </p>
+                <p className="text-base text-muted-foreground leading-relaxed">{product.description}</p>
+              </div>
+
+              {/* Stock status */}
+              <div className="mt-4">
+                {inStock && !lowStock && (
+                  <p className="text-sm text-green-600 font-medium">✓ In Stock – Ready to ship</p>
+                )}
+                {lowStock && (
+                  <p className="text-sm text-orange-500 font-medium">⚡ Only {product.stock} left in stock!</p>
+                )}
+                {!inStock && (
+                  <p className="text-sm text-gray-500 font-medium">✗ Out of Stock</p>
+                )}
               </div>
 
               <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-                <Button 
-                  size="lg" 
-                  className="flex-1 gap-2" 
+                <Button
+                  size="lg"
+                  className="flex-1 gap-2"
                   onClick={handleAddToCart}
-                  disabled={adding || product.stock === 0}
+                  disabled={adding || !inStock}
                 >
                   {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-5 w-5" />}
-                  {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                  {!inStock ? 'Out of Stock' : adding ? 'Adding...' : 'Add to Cart'}
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2">
-                  <Heart className="h-5 w-5" /> Wishlist
+                <Button size="lg" variant="outline" className="gap-2" onClick={handleToggleWishlist}>
+                  <Heart className={cn('h-5 w-5', inWishlist && 'fill-primary text-primary')} />
+                  {inWishlist ? 'Saved' : 'Wishlist'}
                 </Button>
               </div>
 

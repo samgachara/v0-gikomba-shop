@@ -17,9 +17,37 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: 'Gikomba Shop - Affordable Fashion for Kenya',
+  metadataBase: new URL('https://gikomba.shop'),
+  title: {
+    default: 'Gikomba Shop – Affordable Fashion for Kenya',
+    template: '%s | Gikomba Shop',
+  },
   description:
     'Shop affordable fashion, electronics, and home goods at gikomba.shop. Quality products at unbeatable prices, delivered across Kenya with M-Pesa.',
+  keywords: ['online shopping Kenya', 'Gikomba', 'fashion Kenya', 'M-Pesa shopping', 'electronics Kenya'],
+  openGraph: {
+    title: 'Gikomba Shop – Affordable Fashion for Kenya',
+    description:
+      "Kenya's favorite online marketplace. Quality products at unbeatable prices, delivered to your doorstep.",
+    url: 'https://gikomba.shop',
+    siteName: 'Gikomba Shop',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Gikomba Shop – Kenya\'s Favorite Online Marketplace',
+      },
+    ],
+    locale: 'en_KE',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Gikomba Shop – Affordable Fashion for Kenya',
+    description: "Kenya's favorite online marketplace.",
+    images: ['/og-image.png'],
+  },
   icons: {
     icon: [
       { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },

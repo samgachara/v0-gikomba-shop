@@ -1,10 +1,9 @@
-# robots.txt
-
 User-agent: *
 Allow: /
 
-# Disallow specific paths (example)
-# Disallow: /admin/
-# Disallow: /private/
+Disallow: /dashboard/admin
+Disallow: /dashboard/seller
+Disallow: /api/
+Disallow: /auth/
 
-Sitemap: https://www.gikomba.shop/sitemap.xml
+Sitemap: https://gikomba.shop/sitemap.xml

@@ -5,6 +5,9 @@ interface UseProductsOptions {
   category?: string
   search?: string
   featured?: boolean
+  sort?: string
+  minPrice?: number | null
+  maxPrice?: number | null
   page?: number
   limit?: number
 }
@@ -22,23 +25,23 @@ const fetcher = (url: string) =>
     .then((j) => j.data as ProductsResponse)
 
 export function useProducts(options: UseProductsOptions = {}) {
-  const { category, search, featured, page = 1, limit = 20 } = options
+  const { category, search, featured, sort, minPrice, maxPrice, page = 1, limit = 20 } = options
 
   const params = new URLSearchParams()
   if (category && category !== 'all') params.set('category', category)
   if (search) params.set('search', search)
   if (featured) params.set('featured', 'true')
+  if (sort && sort !== 'newest') params.set('sort', sort)
+  if (minPrice != null && minPrice > 0) params.set('min_price', String(minPrice))
+  if (maxPrice != null && maxPrice < 100000) params.set('max_price', String(maxPrice))
   params.set('page', String(page))
   params.set('limit', String(limit))
 
   const key = `/api/products?${params.toString()}`
 
   const { data, error, isLoading, mutate } = useSWR<ProductsResponse>(key, fetcher, {
-    // Keep previous data while fetching new page — no flicker
     keepPreviousData: true,
-    // Cache for 30 seconds — products don't change that fast
     dedupingInterval: 30_000,
-    // Revalidate when window refocuses
     revalidateOnFocus: true,
   })
 

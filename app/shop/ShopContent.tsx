@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Heart, ShoppingBag, Star, Loader2, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Heart, ShoppingBag, Star, Loader2, Search, SlidersHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/header'
 import { useProducts } from '@/hooks/use-products'
 import { useDebounce } from '@/hooks/use-debounce'
+import { toast } from 'sonner'
 
 const CATEGORIES = [
   { value: 'all', label: 'All Categories' },
@@ -25,6 +26,13 @@ const CATEGORIES = [
   { value: 'accessories', label: 'Accessories' },
 ]
 
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest Arrivals' },
+  { value: 'price_asc', label: 'Price: Low to High' },
+  { value: 'price_desc', label: 'Price: High to Low' },
+  { value: 'popular', label: 'Most Popular' },
+]
+
 function formatPrice(p: number) { return `KSh ${p.toLocaleString()}` }
 function getDiscount(price: number, orig: number | null) {
   if (!orig || orig <= price) return null
@@ -34,15 +42,26 @@ function getDiscount(price: number, orig: number | null) {
 export default function ShopContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+
   const [category, setCategory] = useState(searchParams.get('category') || 'all')
+  const [sort, setSort] = useState('newest')
   const [search, setSearch] = useState('')
+  const [minPriceInput, setMinPriceInput] = useState('')
+  const [maxPriceInput, setMaxPriceInput] = useState('')
   const [page, setPage] = useState(1)
+  const [addingId, setAddingId] = useState<string | null>(null)
+
   const debouncedSearch = useDebounce(search, 400)
+  const minPrice = minPriceInput ? Number(minPriceInput) : null
+  const maxPrice = maxPriceInput ? Number(maxPriceInput) : null
 
   const { products, isLoading, totalPages, hasNextPage, hasPrevPage } = useProducts({
     category,
     search: debouncedSearch,
     featured: searchParams.get('filter') === 'new',
+    sort,
+    minPrice,
+    maxPrice,
     page,
     limit: 20,
   })
@@ -50,17 +69,50 @@ export default function ShopContent() {
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
   const { user } = useAuth()
 
-  // Reset to page 1 when filters change
-  const handleCategoryChange = (val: string) => { setCategory(val); setPage(1) }
-  const handleSearchChange = (val: string) => { setSearch(val); setPage(1) }
+  const resetPage = () => setPage(1)
+  const handleCategoryChange = (val: string) => { setCategory(val); resetPage() }
+  const handleSortChange = (val: string) => { setSort(val); resetPage() }
+  const handleSearchChange = (val: string) => { setSearch(val); resetPage() }
 
-  const handleAddToCart = async (productId: string) => {
-    if (!user) { router.push('/auth/login'); return }
-    await addToCart(productId)
+  const hasActiveFilters = category !== 'all' || sort !== 'newest' || search || minPriceInput || maxPriceInput
+  const clearFilters = () => {
+    setCategory('all')
+    setSort('newest')
+    setSearch('')
+    setMinPriceInput('')
+    setMaxPriceInput('')
+    resetPage()
+  }
+
+  const handleAddToCart = async (productId: string, productName: string, inStock: boolean) => {
+    if (!inStock) return
+    if (!user) {
+      toast.error('Please sign in to add items to your cart', {
+        action: {
+          label: 'Sign In',
+          onClick: () => router.push('/auth/login'),
+        },
+      })
+      return
+    }
+    setAddingId(productId)
+    try {
+      await addToCart(productId)
+    } finally {
+      setAddingId(null)
+    }
   }
 
   const handleToggleWishlist = async (productId: string) => {
-    if (!user) { router.push('/auth/login'); return }
+    if (!user) {
+      toast.error('Please sign in to save items to your wishlist', {
+        action: {
+          label: 'Sign In',
+          onClick: () => router.push('/auth/login'),
+        },
+      })
+      return
+    }
     isInWishlist(productId) ? await removeFromWishlist(productId) : await addToWishlist(productId)
   }
 
@@ -76,28 +128,73 @@ export default function ShopContent() {
         </div>
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search products..."
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10"
-              />
+          {/* Filter Bar */}
+          <div className="flex flex-col gap-3 mb-8">
+            {/* Row 1: Search + Sort */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search products..."
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={category} onValueChange={handleCategoryChange}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={sort} onValueChange={handleSortChange}>
+                <SelectTrigger className="w-full sm:w-52">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={category} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+            {/* Row 2: Price range + active filter pills */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="font-medium">KSh</span>
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={minPriceInput}
+                  onChange={(e) => { setMinPriceInput(e.target.value); resetPage() }}
+                  className="w-28 h-8 text-sm"
+                />
+                <span>–</span>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={maxPriceInput}
+                  onChange={(e) => { setMaxPriceInput(e.target.value); resetPage() }}
+                  className="w-28 h-8 text-sm"
+                />
+              </div>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 gap-1 text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5" /> Clear filters
+                </Button>
+              )}
+              {!isLoading && (
+                <span className="text-sm text-muted-foreground ml-auto">
+                  {products.length > 0 ? `Showing ${products.length} products` : ''}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Grid */}
@@ -108,7 +205,7 @@ export default function ShopContent() {
           ) : products.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-muted-foreground text-lg">No products found</p>
-              <Button variant="outline" className="mt-4" onClick={() => { setSearch(''); setCategory('all') }}>
+              <Button variant="outline" className="mt-4" onClick={clearFilters}>
                 Clear filters
               </Button>
             </div>
@@ -118,31 +215,59 @@ export default function ShopContent() {
                 {products.map((product) => {
                   const discount = getDiscount(product.price, product.original_price)
                   const inWishlist = isInWishlist(product.id)
+                  const inStock = (product.stock ?? 1) > 0
+                  const lowStock = inStock && (product.stock ?? 99) <= 5
+                  const isAdding = addingId === product.id
+
                   return (
                     <div key={product.id} className="group relative flex flex-col overflow-hidden rounded-xl bg-card border border-border">
                       <Link href={`/product/${product.id}`} className="relative aspect-[3/4] overflow-hidden">
                         <img
                           src={product.image_url || 'https://via.placeholder.com/400x500'}
                           alt={product.name}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          className={cn(
+                            'h-full w-full object-cover transition-transform duration-300 group-hover:scale-105',
+                            !inStock && 'opacity-60 grayscale'
+                          )}
                           loading="lazy"
                         />
-                        <div className="absolute top-3 left-3 flex flex-col gap-2">
-                          {product.is_new && <Badge className="bg-accent text-accent-foreground">New</Badge>}
-                          {discount && <Badge variant="secondary" className="bg-primary text-primary-foreground">{discount}% Off</Badge>}
+                        {/* Top-left badges */}
+                        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                          {!inStock && (
+                            <Badge className="bg-gray-600 text-white text-[10px]">Out of Stock</Badge>
+                          )}
+                          {inStock && lowStock && (
+                            <Badge className="bg-orange-500 text-white text-[10px]">Only {product.stock} left</Badge>
+                          )}
+                          {inStock && !lowStock && product.is_new && (
+                            <Badge className="bg-accent text-accent-foreground text-[10px]">New</Badge>
+                          )}
+                          {discount && <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px]">{discount}% Off</Badge>}
                         </div>
                       </Link>
 
+                      {/* Wishlist button */}
                       <button
                         onClick={() => handleToggleWishlist(product.id)}
                         className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm"
+                        aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                       >
                         <Heart className={cn('h-4 w-4 transition-colors', inWishlist ? 'fill-primary text-primary' : 'text-muted-foreground')} />
                       </button>
 
+                      {/* Hover Add to Cart */}
                       <div className="absolute inset-x-3 bottom-[140px] opacity-0 translate-y-2 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
-                        <Button className="w-full gap-2" size="sm" onClick={() => handleAddToCart(product.id)}>
-                          <ShoppingBag className="h-4 w-4" />Add to Cart
+                        <Button
+                          className="w-full gap-2"
+                          size="sm"
+                          disabled={!inStock || isAdding}
+                          onClick={() => handleAddToCart(product.id, product.name, inStock)}
+                        >
+                          {isAdding
+                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                            : <ShoppingBag className="h-4 w-4" />
+                          }
+                          {!inStock ? 'Out of Stock' : isAdding ? 'Adding...' : 'Add to Cart'}
                         </Button>
                       </div>
 
