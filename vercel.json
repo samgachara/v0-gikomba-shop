@@ -2,7 +2,5 @@
   "buildCommand": "next build",
   "installCommand": "pnpm install",
   "outputDirectory": ".next",
-  "env": {
-    "NEXT_TURBOPACK": "0"
-  }
+  "nodeVersion": "22.x"
 }
