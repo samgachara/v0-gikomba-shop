@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -20,17 +20,13 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Refresh session (required for Server Components)
   const { data: { user } } = await supabase.auth.getUser()
-
   const path = request.nextUrl.pathname
 
-  // Protected route groups
   const isAdminRoute  = path.startsWith('/dashboard/admin')
   const isSellerRoute = path.startsWith('/dashboard/seller')
   const isAuthRoute   = path.startsWith('/auth/login') || path.startsWith('/auth/sign-up')
 
-  // Not logged in → send to login
   if (!user && (isAdminRoute || isSellerRoute)) {
     const loginUrl = new URL('/auth/login', request.url)
     loginUrl.searchParams.set('redirectTo', path)
@@ -46,17 +42,12 @@ export async function proxy(request: NextRequest) {
 
     const role = profile?.role ?? 'buyer'
 
-    // Admin route guard
     if (isAdminRoute && role !== 'admin') {
       return NextResponse.redirect(new URL('/', request.url))
     }
-
-    // Seller route guard (admin can also access seller pages)
     if (isSellerRoute && !['seller', 'admin'].includes(role)) {
       return NextResponse.redirect(new URL('/', request.url))
     }
-
-    // Logged-in users hitting /auth/login or /auth/sign-up → redirect to their dashboard
     if (isAuthRoute) {
       if (role === 'admin')  return NextResponse.redirect(new URL('/dashboard/admin', request.url))
       if (role === 'seller') return NextResponse.redirect(new URL('/dashboard/seller', request.url))
