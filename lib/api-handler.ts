@@ -18,11 +18,11 @@ export async function getAuthUser(): Promise<{
   const supabase = await createClient()
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
-    if (error) {
-      console.error('[getAuthUser] Supabase error:', error.message)
-      return { user: null, supabase }
+    // Auth errors for unauthenticated users are expected — don't log as errors
+    if (error && error.message !== 'Auth session missing!') {
+      console.warn('[getAuthUser] Unexpected auth error:', error.message)
     }
-    return { user, supabase }
+    return { user: user ?? null, supabase }
   } catch (err) {
     console.error('[getAuthUser] Unexpected error:', err)
     return { user: null, supabase }
@@ -50,7 +50,7 @@ export function sanitizeSearch(input: string): string {
     .trim()
     .slice(0, 100)
     .replace(/[%_\\]/g, (c) => `\\${c}`)
-    .replace(/['"`;]/g, '')
+    .replace(/['";`]/g, '')
 }
 
 export function parsePagination(searchParams: URLSearchParams) {

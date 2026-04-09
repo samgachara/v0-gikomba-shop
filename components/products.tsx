@@ -78,7 +78,7 @@ export function Products() {
             </p>
           </div>
           <Button variant="outline" className="w-fit" asChild>
-            <Link href="/products">View All Products</Link>
+            <Link href="/shop">View All Products</Link>
           </Button>
         </div>
 

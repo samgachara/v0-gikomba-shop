@@ -39,3 +39,7 @@ node-compile-cache/
 
 # pnpm
 .pnpm-debug.log*
+
+# Sensitive config files
+rclone*.conf
+*.conf

@@ -85,13 +85,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     data: serverCart = [],
     isLoading: serverCartLoading,
     mutate: mutateCart,
-  } = useSWR<CartItem[]>(user ? '/api/cart' : null, fetcher)
+  } = useSWR<CartItem[]>(user ? '/api/cart' : null, fetcher, { shouldRetryOnError: false })
 
   const {
     data: wishlist = [],
     isLoading: wishlistLoading,
     mutate: mutateWishlist,
-  } = useSWR<WishlistItem[]>(user ? '/api/wishlist' : null, fetcher)
+  } = useSWR<WishlistItem[]>(user ? '/api/wishlist' : null, fetcher, { shouldRetryOnError: false, revalidateOnFocus: false })
 
   // ── Auth listener ──────────────────────────────────────────────────────
   useEffect(() => {

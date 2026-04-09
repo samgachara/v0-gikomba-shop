@@ -17,6 +17,7 @@ const nextConfig = {
     return [
       // Fix broken /categories link
       { source: '/categories', destination: '/shop#categories', permanent: true },
+      { source: '/products', destination: '/shop', permanent: true },
       // Fix broken footer/header links → shop with filter param
       { source: '/new-arrivals', destination: '/shop?filter=new', permanent: true },
       { source: '/best-sellers', destination: '/shop?filter=bestsellers', permanent: true },
