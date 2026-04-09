@@ -1,11 +1,7 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
@@ -16,16 +12,21 @@ const nextConfig = {
       { protocol: 'https', hostname: 'ecrttmokkmaqdlsxhlvv.supabase.co' },
     ],
   },
-  experimental: {
-    ppr: false,
-  },
+  experimental: { ppr: false },
   async redirects() {
     return [
-      {
-        source: '/categories',
-        destination: '/shop#categories',
-        permanent: true,
-      },
+      // Fix broken /categories link
+      { source: '/categories', destination: '/shop#categories', permanent: true },
+      // Fix broken footer/header links → shop with filter param
+      { source: '/new-arrivals', destination: '/shop?filter=new', permanent: true },
+      { source: '/best-sellers', destination: '/shop?filter=bestsellers', permanent: true },
+      { source: '/sale', destination: '/shop?filter=sale', permanent: true },
+      // Fix broken /become-a-seller link
+      { source: '/become-a-seller', destination: '/auth/sign-up', permanent: false },
+      // Fix alternate legal URL patterns (with hyphens)
+      { source: '/privacy-policy', destination: '/privacy', permanent: true },
+      { source: '/terms-of-service', destination: '/terms', permanent: true },
+      { source: '/cookie-policy', destination: '/cookies', permanent: true },
     ]
   },
   async headers() {

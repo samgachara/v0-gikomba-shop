@@ -44,7 +44,12 @@ export default function ShopContent() {
   const router = useRouter()
 
   const [category, setCategory] = useState(searchParams.get('category') || 'all')
-  const [sort, setSort] = useState('newest')
+  // Map ?filter= URL param to initial sort value
+  const filterParam = searchParams.get('filter')
+  const initialSort = filterParam === 'bestsellers' ? 'popular'
+    : filterParam === 'sale' ? 'price_asc'
+    : 'newest'
+  const [sort, setSort] = useState(initialSort)
   const [search, setSearch] = useState('')
   const [minPriceInput, setMinPriceInput] = useState('')
   const [maxPriceInput, setMaxPriceInput] = useState('')
@@ -122,8 +127,18 @@ export default function ShopContent() {
       <main className="min-h-screen bg-background">
         <div className="border-b border-border bg-secondary/30">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-            <h1 className="text-3xl font-bold text-foreground">Shop</h1>
-            <p className="text-muted-foreground mt-2">Discover amazing deals on quality products</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              {filterParam === 'new' ? 'New Arrivals'
+                : filterParam === 'bestsellers' ? 'Best Sellers'
+                : filterParam === 'sale' ? 'Sale'
+                : 'Shop'}
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              {filterParam === 'new' ? 'The latest products just added'
+                : filterParam === 'bestsellers' ? 'Our most popular products'
+                : filterParam === 'sale' ? 'Great deals on selected items'
+                : 'Discover amazing deals on quality products'}
+            </p>
           </div>
         </div>
 

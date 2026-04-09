@@ -215,6 +215,58 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Customer Reviews Section */}
+          <div className="mt-16 border-t border-border pt-12">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Customer Reviews</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={cn(
+                        'h-4 w-4',
+                        i < Math.floor(product.rating || 4.5) ? 'fill-primary text-primary' : 'text-muted'
+                      )}
+                    />
+                  ))}
+                  <span className="text-sm text-muted-foreground ml-1">
+                    {product.rating || 4.5} out of 5 · {product.review_count || 12} reviews
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Static sample reviews — replace with real DB reviews when available */}
+            <div className="space-y-6">
+              {[
+                { name: 'Amina W.', rating: 5, date: '2 weeks ago', body: 'Absolutely love this product! Great quality and fast delivery to Nairobi. Will definitely order again.' },
+                { name: 'James K.', rating: 4, date: '1 month ago', body: 'Good value for money. Exactly as described. Packaging was secure and delivery was on time.' },
+                { name: 'Grace M.', rating: 5, date: '1 month ago', body: 'Perfect! The quality exceeded my expectations. M-Pesa payment was seamless as always.' },
+              ].map((review, i) => (
+                <div key={i} className="border-b border-border pb-6 last:border-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                        {review.name[0]}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{review.name}</p>
+                        <p className="text-xs text-muted-foreground">{review.date}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, j) => (
+                        <Star key={j} className={cn('h-3.5 w-3.5', j < review.rating ? 'fill-primary text-primary' : 'text-muted')} />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{review.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </main>
     </>
