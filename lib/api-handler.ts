@@ -18,10 +18,7 @@ export async function getAuthUser(): Promise<{
   const supabase = await createClient()
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
-    // Auth errors for unauthenticated users are expected — don't log as errors
-    if (error && error.message !== 'Auth session missing!') {
-      console.warn('[getAuthUser] Unexpected auth error:', error.message)
-    }
+    // Auth errors for unauthenticated visitors are expected — do not log
     return { user: user ?? null, supabase }
   } catch (err) {
     console.error('[getAuthUser] Unexpected error:', err)

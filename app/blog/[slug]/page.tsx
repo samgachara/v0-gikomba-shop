@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const post = posts[slug]
   if (!post) return { title: 'Blog | Gikomba Shop' }
-  return { title: `${post.title} | Gikomba Shop` }
+  return { title: post.title }
 }
 
 export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
