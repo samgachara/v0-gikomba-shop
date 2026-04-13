@@ -1,22 +1,30 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { handleError, logInfo } from '@/lib/api-error'
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('id', id)
-    .single()
+  try {
+    const { id } = await params
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 })
+    logInfo('Fetching product', { product_id: id })
+
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error || !data) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    return handleError(error)
   }
-
-  return NextResponse.json(data)
 }

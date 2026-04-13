@@ -40,48 +40,93 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const cartTotal = cart.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0)
 
   const addToCart = useCallback(async (productId: string, quantity = 1) => {
-    await fetch('/api/cart', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ product_id: productId, quantity }),
-    })
-    mutateCart()
+    try {
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId, quantity }),
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to add to cart')
+      }
+      await mutateCart()
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      throw error
+    }
   }, [mutateCart])
 
   const updateCartItem = useCallback(async (id: string, quantity: number) => {
-    await fetch('/api/cart', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, quantity }),
-    })
-    mutateCart()
+    try {
+      const res = await fetch('/api/cart', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, quantity }),
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to update cart item')
+      }
+      await mutateCart()
+    } catch (error) {
+      console.error('Error updating cart item:', error)
+      throw error
+    }
   }, [mutateCart])
 
   const removeFromCart = useCallback(async (id: string) => {
-    await fetch('/api/cart', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    })
-    mutateCart()
+    try {
+      const res = await fetch('/api/cart', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to remove from cart')
+      }
+      await mutateCart()
+    } catch (error) {
+      console.error('Error removing from cart:', error)
+      throw error
+    }
   }, [mutateCart])
 
   const addToWishlist = useCallback(async (productId: string) => {
-    await fetch('/api/wishlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ product_id: productId }),
-    })
-    mutateWishlist()
+    try {
+      const res = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId }),
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to add to wishlist')
+      }
+      await mutateWishlist()
+    } catch (error) {
+      console.error('Error adding to wishlist:', error)
+      throw error
+    }
   }, [mutateWishlist])
 
   const removeFromWishlist = useCallback(async (productId: string) => {
-    await fetch('/api/wishlist', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ product_id: productId }),
-    })
-    mutateWishlist()
+    try {
+      const res = await fetch('/api/wishlist', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId }),
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to remove from wishlist')
+      }
+      await mutateWishlist()
+    } catch (error) {
+      console.error('Error removing from wishlist:', error)
+      throw error
+    }
   }, [mutateWishlist])
 
   const isInWishlist = useCallback((productId: string) => {
