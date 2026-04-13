@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import useSWR from "swr"
@@ -42,7 +42,7 @@ function getDiscount(price: number, originalPrice: number | null): number | null
   return Math.round(((originalPrice - price) / originalPrice) * 100)
 }
 
-export default function ShopPage() {
+function ShopPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const initialCategory = searchParams.get('category') || 'all'
@@ -229,5 +229,17 @@ export default function ShopPage() {
         </div>
       </main>
     </>
+  )
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <ShopPageContent />
+    </Suspense>
   )
 }
