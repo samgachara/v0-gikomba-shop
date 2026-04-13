@@ -35,8 +35,13 @@ export async function GET(request: Request) {
           lastName = parts.slice(1).join(' ') || null
         }
 
-        // Determine role: explicit param > metadata > default buyer
-        const role = roleParam ?? meta.role ?? 'buyer'
+        // Preserve existing role — never overwrite admin/seller on re-login
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        const role = existing?.role ?? roleParam ?? meta.role ?? 'buyer'
 
         const { error: profileError } = await supabase.from('profiles').upsert(
           {
@@ -57,7 +62,9 @@ export async function GET(request: Request) {
 
         // Redirect by role if no explicit next param
         if (next === '/') {
-          return NextResponse.redirect(`${origin}${role === 'seller' ? '/dashboard/seller' : '/'}`)
+          if (role === 'admin')  return NextResponse.redirect(`${origin}/dashboard/admin`)
+          if (role === 'seller') return NextResponse.redirect(`${origin}/dashboard/seller`)
+          return NextResponse.redirect(`${origin}/`)
         }
       }
       return NextResponse.redirect(`${origin}${next}`)

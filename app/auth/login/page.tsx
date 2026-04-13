@@ -23,11 +23,16 @@ export default function LoginPage() {
   const router = useRouter()
 
   const redirectByRole = async (supabase: ReturnType<typeof createClient>) => {
+    const { data: { user: me } } = await supabase.auth.getUser()
+    if (!me) { router.push('/'); return }
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
+      .eq('id', me.id)
       .single()
-    if (profile?.role === 'seller') {
+    if (profile?.role === 'admin') {
+      router.push('/dashboard/admin')
+    } else if (profile?.role === 'seller') {
       router.push('/dashboard/seller')
     } else {
       router.push('/')

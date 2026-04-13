@@ -39,13 +39,13 @@ export function Products() {
       try {
         const supabase = createClient()
         const { data, error } = await supabase
-          .from('seller_products')
-          .select('id, name, price, original_price, image_url, category')
+          .from('products')
+          .select('id, name, title, price, original_price, image_url, category')
           .eq('is_active', true)
           .order('created_at', { ascending: false })
           .limit(8)
 
-        if (!error) setProducts(data ?? [])
+        if (!error && data) setProducts(data.map(p => ({ ...p, name: p.name || p.title || 'Product' })))
       } catch (e) {
         console.error('Failed to fetch products:', e)
       } finally {
