@@ -11,8 +11,10 @@ export interface Product {
   review_count: number
   is_featured: boolean
   is_new: boolean
+  vendor_id?: string
   created_at: string
   updated_at: string
+  vendor?: Vendor
 }
 
 export interface Profile {
@@ -68,4 +70,42 @@ export interface OrderItem {
   price: number
   created_at: string
   product?: Product
+}
+
+export interface Vendor {
+  id: string
+  user_id: string
+  shop_name: string
+  shop_description?: string
+  shop_image_url?: string
+  bank_account?: string
+  bank_name?: string
+  mpesa_phone?: string
+  status: 'pending' | 'approved' | 'rejected' | 'suspended'
+  approval_reason?: string
+  total_earnings: number
+  total_orders: number
+  rating: number
+  review_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface SellerEarnings {
+  id: string
+  vendor_id: string
+  order_id?: string
+  amount: number
+  platform_fee: number
+  net_earnings: number
+  status: 'pending' | 'verified' | 'payout_pending' | 'paid'
+  payout_date?: string
+  transaction_id?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface UserProfile extends Profile {
+  role?: 'customer' | 'seller' | 'admin'
+  vendor_id?: string
 }

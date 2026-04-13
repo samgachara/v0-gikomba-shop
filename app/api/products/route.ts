@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('products')
-      .select('*', { count: 'exact' })
+      .select('*, vendor:vendors(*)', { count: 'exact' })
       .order('created_at', { ascending: false })
 
     if (category && category !== 'all') {

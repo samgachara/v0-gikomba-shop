@@ -220,6 +220,13 @@ function ShopPageContent() {
                           </span>
                         )}
                       </div>
+
+                      {/* Vendor Info */}
+                      {product.vendor && (
+                        <Link href={`/vendor/${product.vendor.id}`} className="text-xs text-muted-foreground hover:text-primary transition-colors line-clamp-1">
+                          by {product.vendor.shop_name}
+                        </Link>
+                      )}
                     </div>
                   </div>
                 )
