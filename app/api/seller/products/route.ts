@@ -1,98 +1,74 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { CreateProductSchema, UpdateSellerProductSchema } from '@/lib/validations'
+import { CreateSellerProductSchema } from '@/lib/validations'
 import { handleError, logInfo } from '@/lib/api-error'
 
+// GET /api/seller/products — seller's own product listings
 export async function GET(request: Request) {
   try {
     const supabase = await createClient()
-
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Get vendor for user
-    const { data: vendor, error: vendorError } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
+    const { searchParams } = new URL(request.url)
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
+    const offset = parseInt(searchParams.get('offset') || '0')
 
-    if (vendorError || !vendor) {
-      return NextResponse.json(
-        { error: 'Vendor account not found' },
-        { status: 404 }
-      )
-    }
+    logInfo('Seller fetching products', { seller_id: user.id })
 
-    logInfo('Fetching seller products', { vendor_id: vendor.id })
-
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('products')
-      .select('*')
-      .eq('vendor_id', vendor.id)
+      .select('*', { count: 'exact' })
+      .eq('seller_id', user.id)
       .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
-    return NextResponse.json(data)
+    return NextResponse.json({ data, pagination: { total: count, limit, offset } })
   } catch (error) {
     return handleError(error)
   }
 }
 
+// POST /api/seller/products — create a new product listing
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Get vendor for user
-    const { data: vendor, error: vendorError } = await supabase
-      .from('vendors')
+    // Confirm user is an approved seller
+    const { data: seller } = await supabase
+      .from('sellers')
       .select('id, status')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single()
 
-    if (vendorError || !vendor) {
-      return NextResponse.json(
-        { error: 'Vendor account not found' },
-        { status: 404 }
-      )
+    if (!seller) {
+      return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
     }
-
-    if (vendor.status !== 'approved') {
+    if (seller.status !== 'approved') {
       return NextResponse.json(
-        { error: 'Vendor account must be approved before adding products' },
+        { error: 'Seller account is pending approval' },
         { status: 403 }
       )
     }
 
     const body = await request.json()
-    const productData = CreateProductSchema.parse(body)
+    const productData = CreateSellerProductSchema.parse(body)
 
-    logInfo('Creating seller product', { vendor_id: vendor.id })
+    logInfo('Creating product', { seller_id: user.id, title: productData.title })
 
     const { data, error } = await supabase
       .from('products')
-      .insert({
-        ...productData,
-        vendor_id: vendor.id,
-      })
+      .insert({ ...productData, seller_id: user.id, is_active: true })
       .select()
       .single()
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
     return NextResponse.json(data, { status: 201 })
   } catch (error) {

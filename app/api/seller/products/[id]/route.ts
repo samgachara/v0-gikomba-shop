@@ -3,160 +3,86 @@ import { NextResponse } from 'next/server'
 import { UpdateSellerProductSchema } from '@/lib/validations'
 import { handleError, logInfo } from '@/lib/api-error'
 
-export async function GET(
+// PATCH /api/seller/products/[id] — update own product
+export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
     const supabase = await createClient()
-
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { data: product, error } = await supabase
+    // Verify ownership
+    const { data: existing } = await supabase
       .from('products')
-      .select('*')
+      .select('id, seller_id')
       .eq('id', id)
       .single()
 
-    if (error || !product) {
+    if (!existing) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
-
-    // Verify ownership
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!vendor || product.vendor_id !== vendor.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      )
-    }
-
-    return NextResponse.json(product)
-  } catch (error) {
-    return handleError(error)
-  }
-}
-
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    const supabase = await createClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (existing.seller_id !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const body = await request.json()
-    const updateData = UpdateSellerProductSchema.parse(body)
+    const updates = UpdateSellerProductSchema.parse(body)
 
-    // Verify ownership
-    const { data: product } = await supabase
+    logInfo('Updating product', { seller_id: user.id, product_id: id })
+
+    const { data, error } = await supabase
       .from('products')
-      .select('vendor_id')
+      .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id)
-      .single()
-
-    if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!vendor || product.vendor_id !== vendor.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      )
-    }
-
-    logInfo('Updating seller product', { product_id: id })
-
-    const { data: updated, error } = await supabase
-      .from('products')
-      .update({
-        ...updateData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
+      .eq('seller_id', user.id)
       .select()
       .single()
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
-    return NextResponse.json(updated)
+    return NextResponse.json(data)
   } catch (error) {
     return handleError(error)
   }
 }
 
+// DELETE /api/seller/products/[id] — soft-delete (set is_active = false)
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
     const supabase = await createClient()
-
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { data: product } = await supabase
+    const { data: existing } = await supabase
       .from('products')
-      .select('vendor_id')
+      .select('id, seller_id')
       .eq('id', id)
       .single()
 
-    if (!product) {
+    if (!existing) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
-
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!vendor || product.vendor_id !== vendor.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      )
+    if (existing.seller_id !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    logInfo('Deleting seller product', { product_id: id })
+    logInfo('Deactivating product', { seller_id: user.id, product_id: id })
 
-    const { error } = await supabase
+    // Soft delete — preserves order history
+    await supabase
       .from('products')
-      .delete()
+      .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', id)
-
-    if (error) {
-      throw error
-    }
+      .eq('seller_id', user.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

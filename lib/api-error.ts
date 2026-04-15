@@ -15,7 +15,6 @@ export class ApiError extends Error {
 export function handleError(error: unknown) {
   console.error('[API Error]', error)
 
-  // Handle Zod validation errors
   if (error instanceof ZodError) {
     return NextResponse.json(
       {
@@ -29,7 +28,6 @@ export function handleError(error: unknown) {
     )
   }
 
-  // Handle custom API errors
   if (error instanceof ApiError) {
     return NextResponse.json(
       { error: error.message, code: error.code },
@@ -37,20 +35,15 @@ export function handleError(error: unknown) {
     )
   }
 
-  // Handle Supabase errors
-  if (error instanceof Error && 'message' in error) {
+  if (error instanceof Error) {
     const message = error.message || 'Internal server error'
     const status = message.includes('not found') ? 404 : 500
     return NextResponse.json({ error: message }, { status })
   }
 
-  // Default error response
-  return NextResponse.json(
-    { error: 'Internal server error' },
-    { status: 500 }
-  )
+  return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
 }
 
-export function logInfo(message: string, data?: any) {
+export function logInfo(message: string, data?: unknown) {
   console.log(`[API Info] ${message}`, data || '')
 }

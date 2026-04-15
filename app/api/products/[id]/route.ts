@@ -3,20 +3,26 @@ import { NextResponse } from 'next/server'
 import { handleError, logInfo } from '@/lib/api-error'
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
-
-    logInfo('Fetching product', { product_id: id })
+    logInfo('Fetching product', { id })
 
     const supabase = await createClient()
 
     const { data, error } = await supabase
       .from('products')
-      .select('*, vendor:vendors(*)')
+      .select(
+        `*,
+         seller:sellers(id, store_name, verified, logo_url, location, description),
+         reviews:product_reviews(id, rating, comment, created_at,
+           user:profiles(id, first_name, last_name, avatar_url)
+         )`
+      )
       .eq('id', id)
+      .eq('is_active', true)
       .single()
 
     if (error || !data) {
