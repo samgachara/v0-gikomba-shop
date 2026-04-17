@@ -32,8 +32,14 @@ const fetcher = async (url: string) => {
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const { data: cart = [], isLoading: cartLoading, mutate: mutateCart } = useSWR<CartItem[]>('/api/cart', fetcher)
-  const { data: wishlist = [], isLoading: wishlistLoading, mutate: mutateWishlist } = useSWR<WishlistItem[]>('/api/wishlist', fetcher)
+  const SWR_OPTS = {
+    shouldRetryOnError: false,   // stop hammering on 401 / network error
+    dedupingInterval: 30_000,    // dedupe requests within 30 seconds
+    revalidateOnFocus: false,    // don't refetch when tab regains focus
+    revalidateOnReconnect: true, // do refetch on network reconnect
+  }
+  const { data: cart = [], isLoading: cartLoading, mutate: mutateCart } = useSWR<CartItem[]>('/api/cart', fetcher, SWR_OPTS)
+  const { data: wishlist = [], isLoading: wishlistLoading, mutate: mutateWishlist } = useSWR<WishlistItem[]>('/api/wishlist', fetcher, SWR_OPTS)
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
   const wishlistCount = wishlist.length
