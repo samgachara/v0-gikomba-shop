@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /dashboard/admin
+Disallow: /dashboard/seller
+Disallow: /api/
+Disallow: /auth/
+
+Sitemap: https://gikomba.shop/sitemap.xml

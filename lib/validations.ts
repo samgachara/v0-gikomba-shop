@@ -1,145 +1,94 @@
 import { z } from 'zod'
 
-// ─── Cart ───────────────────────────────────────────────────────────────────
-export const AddToCartSchema = z.object({
+// Password validation - strong password rules
+export const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number')
+  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character')
+
+// Email validation
+export const emailSchema = z
+  .string()
+  .email('Invalid email address')
+  .min(1, 'Email is required')
+
+// Phone validation (Kenya format)
+export const phoneSchema = z
+  .string()
+  .min(10, 'Phone number must be at least 10 digits')
+  .regex(/^(\+254|254|0)?[71]\d{8}$/, 'Invalid Kenyan phone number')
+
+// Cart schemas
+export const addToCartSchema = z.object({
   product_id: z.string().uuid('Invalid product ID'),
-  quantity: z.number().int().positive('Quantity must be positive').optional().default(1),
+  quantity: z.number().int().min(1).max(100).default(1),
 })
 
-export const UpdateCartItemSchema = z.object({
+export const updateCartSchema = z.object({
   id: z.string().uuid('Invalid cart item ID'),
-  quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+  quantity: z.number().int().min(1).max(100),
 })
 
-export const DeleteCartItemSchema = z.object({
+export const removeFromCartSchema = z.object({
   id: z.string().uuid('Invalid cart item ID'),
 })
 
-// ─── Wishlist ────────────────────────────────────────────────────────────────
-export const AddToWishlistSchema = z.object({
+// Wishlist schemas
+export const wishlistSchema = z.object({
   product_id: z.string().uuid('Invalid product ID'),
 })
 
-export const DeleteWishlistItemSchema = z.object({
-  product_id: z.string().uuid('Invalid product ID'),
-})
-
-// ─── Products ────────────────────────────────────────────────────────────────
-export const GetProductsSchema = z.object({
-  category: z.string().optional(),
-  featured: z.string().optional(),
-  search: z.string().optional(),
-  filter: z.enum(['new', 'sale', 'bestsellers']).optional(),
-  limit: z.string().transform(Number).optional(),
-  offset: z.string().transform(Number).optional(),
-  page: z.string().transform(Number).optional(),
-})
-
-// ─── Orders ──────────────────────────────────────────────────────────────────
-// Matches your live `orders` table:
-//   buyer_id, product_id, status, total, payment_status, payment_method,
-//   mpesa_transaction_id, shipping_address, shipping_city, phone
-export const CreateOrderSchema = z.object({
-  shipping_address: z.string().min(5, 'Address must be at least 5 characters'),
-  shipping_city: z.string().min(2, 'City must be at least 2 characters'),
-  phone: z.string().regex(/^\+?[0-9\s\-()+]+$/, 'Invalid phone number'),
-  payment_method: z.enum(['mpesa', 'card', 'cash'], {
-    message: 'Invalid payment method',
+// Order schemas
+export const orderSchema = z.object({
+  shipping_address: z.string().min(5, 'Address is required').max(500),
+  shipping_city: z.string().min(2, 'City is required').max(100),
+  phone: phoneSchema,
+  payment_method: z.enum(['mpesa', 'card'], {
+    errorMap: () => ({ message: 'Invalid payment method' }),
   }),
 })
 
-// ─── M-Pesa ──────────────────────────────────────────────────────────────────
-export const MpesaCallbackSchema = z.object({
-  Body: z.object({
-    stkCallback: z.object({
-      MerchantRequestID: z.string(),
-      CheckoutRequestID: z.string(),
-      ResultCode: z.number(),
-      ResultDesc: z.string(),
-      CallbackMetadata: z
-        .object({
-          Item: z
-            .array(z.object({ Name: z.string(), Value: z.any() }))
-            .optional(),
-        })
-        .optional(),
-    }),
-  }),
-})
-
-// ─── Sellers ─────────────────────────────────────────────────────────────────
-// Matches `sellers` table: store_name, description, phone, location, logo_url
-// and `profiles` columns: shop_name, shop_description, location, avatar_url
-export const RegisterSellerSchema = z.object({
-  store_name: z
-    .string()
-    .min(3, 'Store name must be at least 3 characters')
-    .max(100),
-  description: z.string().max(500).optional(),
-  phone: z
-    .string()
-    .regex(/^254\d{9}$/, 'Phone must be in format 254xxxxxxxxx')
-    .optional(),
-  location: z.string().max(200).optional(),
-  logo_url: z.string().url('Invalid logo URL').optional(),
-})
-
-export const UpdateSellerSchema = z.object({
-  store_name: z.string().min(3).max(100).optional(),
-  description: z.string().max(500).optional(),
-  phone: z
-    .string()
-    .regex(/^254\d{9}$/, 'Invalid M-Pesa phone number')
-    .optional(),
-  location: z.string().max(200).optional(),
-  logo_url: z.string().url().optional(),
-})
-
-export const ApproveSelllerSchema = z.object({
-  seller_id: z.string().uuid('Invalid seller ID'),
-  status: z.enum(['approved', 'rejected', 'suspended']),
-})
-
-// ─── Seller Products ─────────────────────────────────────────────────────────
-// Matches `products` table (seller_id, title, description, price, image_url,
-//   category, stock, is_active, is_featured, condition, images, tags, original_price)
-export const CreateSellerProductSchema = z.object({
-  title: z.string().min(3, 'Product name must be at least 3 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters').optional(),
-  price: z.number().positive('Price must be positive'),
-  original_price: z.number().positive().optional(),
-  image_url: z.string().url('Invalid image URL').optional(),
-  images: z.array(z.string().url()).optional(),
-  category: z.string().min(2, 'Category is required'),
-  stock: z.number().int().nonnegative('Stock cannot be negative'),
-  condition: z.enum(['new', 'used', 'like_new', 'good', 'fair']).optional().default('used'),
-  tags: z.array(z.string()).optional(),
-  is_featured: z.boolean().optional().default(false),
-})
-
-export const UpdateSellerProductSchema = z.object({
-  title: z.string().min(3).optional(),
-  description: z.string().min(10).optional(),
-  price: z.number().positive().optional(),
-  original_price: z.number().positive().optional(),
-  image_url: z.string().url().optional(),
-  images: z.array(z.string().url()).optional(),
+// Product query schemas
+export const productQuerySchema = z.object({
   category: z.string().optional(),
-  stock: z.number().int().nonnegative().optional(),
-  condition: z.enum(['new', 'used', 'like_new', 'good', 'fair']).optional(),
-  tags: z.array(z.string()).optional(),
-  is_active: z.boolean().optional(),
-  is_featured: z.boolean().optional(),
+  featured: z.enum(['true', 'false']).optional(),
+  search: z.string().max(100).optional(),
+  limit: z.string().regex(/^\d+$/).optional(),
+  page: z.string().regex(/^\d+$/).optional(),
 })
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-export type AddToCart = z.infer<typeof AddToCartSchema>
-export type UpdateCartItem = z.infer<typeof UpdateCartItemSchema>
-export type DeleteCartItem = z.infer<typeof DeleteCartItemSchema>
-export type AddToWishlist = z.infer<typeof AddToWishlistSchema>
-export type CreateOrder = z.infer<typeof CreateOrderSchema>
-export type MpesaCallback = z.infer<typeof MpesaCallbackSchema>
-export type RegisterSeller = z.infer<typeof RegisterSellerSchema>
-export type UpdateSeller = z.infer<typeof UpdateSellerSchema>
-export type CreateSellerProduct = z.infer<typeof CreateSellerProductSchema>
-export type UpdateSellerProduct = z.infer<typeof UpdateSellerProductSchema>
+// Auth schemas
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Password is required'),
+})
+
+export const signUpSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  firstName: z.string().min(1, 'First name is required').max(50),
+  lastName: z.string().min(1, 'Last name is required').max(50),
+  phone: phoneSchema,
+})
+
+// Sanitize search query to prevent injection
+export function sanitizeSearchQuery(query: string): string {
+  return query
+    .replace(/[%_\\]/g, '\\$&') // Escape SQL wildcards
+    .replace(/[<>";]/g, '') // Remove potential XSS/SQL injection chars
+    .trim()
+    .slice(0, 100) // Limit length
+}
+
+// Type exports
+export type AddToCartInput = z.infer<typeof addToCartSchema>
+export type UpdateCartInput = z.infer<typeof updateCartSchema>
+export type RemoveFromCartInput = z.infer<typeof removeFromCartSchema>
+export type WishlistInput = z.infer<typeof wishlistSchema>
+export type CreateOrderInput = z.infer<typeof orderSchema>
+export type ProductQueryInput = z.infer<typeof productQuerySchema>
+export type LoginInput = z.infer<typeof loginSchema>
+export type SignUpInput = z.infer<typeof signUpSchema>

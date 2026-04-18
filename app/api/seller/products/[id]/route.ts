@@ -1,91 +1,57 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { UpdateSellerProductSchema } from '@/lib/validations'
-import { handleError, logInfo } from '@/lib/api-error'
 
-// PATCH /api/seller/products/[id] — update own product
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    // Verify ownership
-    const { data: existing } = await supabase
-      .from('products')
-      .select('id, seller_id')
-      .eq('id', id)
-      .single()
-
-    if (!existing) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-    if (existing.seller_id !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    const body = await request.json()
-    const updates = UpdateSellerProductSchema.parse(body)
-
-    logInfo('Updating product', { seller_id: user.id, product_id: id })
-
-    const { data, error } = await supabase
-      .from('products')
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('seller_id', user.id)
-      .select()
-      .single()
-
-    if (error) throw error
-
-    return NextResponse.json(data)
-  } catch (error) {
-    return handleError(error)
-  }
-}
-
-// DELETE /api/seller/products/[id] — soft-delete (set is_active = false)
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { id } = await params
 
-    const { data: existing } = await supabase
-      .from('products')
-      .select('id, seller_id')
-      .eq('id', id)
-      .single()
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const isAdmin = profile?.role === 'admin'
 
-    if (!existing) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-    if (existing.seller_id !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+  const query = supabase.from('products').delete().eq('id', id)
+  // Admins can delete any product; sellers only their own
+  if (!isAdmin) query.eq('seller_id', user.id)
 
-    logInfo('Deactivating product', { seller_id: user.id, product_id: id })
+  const { error } = await query
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
 
-    // Soft delete — preserves order history
-    await supabase
-      .from('products')
-      .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('seller_id', user.id)
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    return handleError(error)
-  }
+  const { id } = await params
+  const body = await request.json()
+  const { name, description, price, original_price, category, stock, image_url, is_active } = body
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const isAdmin = profile?.role === 'admin'
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (name !== undefined)           { updates.title = name.trim(); updates.name = name.trim() }
+  if (description !== undefined)    updates.description = description?.trim() || null
+  if (price !== undefined)          updates.price = Number(price)
+  if (original_price !== undefined) updates.original_price = original_price ? Number(original_price) : null
+  if (category !== undefined)       updates.category = category.trim()
+  if (stock !== undefined)          updates.stock = Number(stock)
+  if (image_url !== undefined)      updates.image_url = image_url?.trim() || null
+  if (is_active !== undefined)      updates.is_active = Boolean(is_active)
+
+  const query = supabase.from('products').update(updates).eq('id', id)
+  if (!isAdmin) query.eq('seller_id', user.id)
+
+  const { data, error } = await query.select().single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
 }

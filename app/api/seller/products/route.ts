@@ -1,77 +1,71 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { CreateSellerProductSchema } from '@/lib/validations'
-import { handleError, logInfo } from '@/lib/api-error'
 
-// GET /api/seller/products — seller's own product listings
-export async function GET(request: Request) {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('seller_id', user.id)
+    .order('created_at', { ascending: false })
 
-    const { searchParams } = new URL(request.url)
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
-    const offset = parseInt(searchParams.get('offset') || '0')
-
-    logInfo('Seller fetching products', { seller_id: user.id })
-
-    const { data, error, count } = await supabase
-      .from('products')
-      .select('*', { count: 'exact' })
-      .eq('seller_id', user.id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
-
-    if (error) throw error
-
-    return NextResponse.json({ data, pagination: { total: count, limit, offset } })
-  } catch (error) {
-    return handleError(error)
-  }
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
 }
 
-// POST /api/seller/products — create a new product listing
 export async function POST(request: Request) {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
-    // Confirm user is an approved seller
-    const { data: seller } = await supabase
-      .from('sellers')
-      .select('id, status')
-      .eq('id', user.id)
-      .single()
-
-    if (!seller) {
-      return NextResponse.json({ error: 'Seller account not found' }, { status: 403 })
-    }
-    if (seller.status !== 'approved') {
-      return NextResponse.json(
-        { error: 'Seller account is pending approval' },
-        { status: 403 }
-      )
-    }
-
-    const body = await request.json()
-    const productData = CreateSellerProductSchema.parse(body)
-
-    logInfo('Creating product', { seller_id: user.id, title: productData.title })
-
-    const { data, error } = await supabase
-      .from('products')
-      .insert({ ...productData, seller_id: user.id, is_active: true })
-      .select()
-      .single()
-
-    if (error) throw error
-
-    return NextResponse.json(data, { status: 201 })
-  } catch (error) {
-    return handleError(error)
+  if (!['seller', 'admin'].includes(profile?.role ?? '')) {
+    return NextResponse.json({ error: 'Only sellers can add products' }, { status: 403 })
   }
+
+  const body = await request.json()
+  const { name, description, price, original_price, category, stock, image_url } = body
+
+  if (!name?.trim() || !price || !category || stock === undefined) {
+    return NextResponse.json({ error: 'Name, price, category and stock are required' }, { status: 400 })
+  }
+  if (isNaN(Number(price)) || Number(price) <= 0) {
+    return NextResponse.json({ error: 'Price must be a positive number' }, { status: 400 })
+  }
+  if (isNaN(Number(stock)) || Number(stock) < 0) {
+    return NextResponse.json({ error: 'Stock must be 0 or more' }, { status: 400 })
+  }
+
+  const { data, error } = await supabase
+    .from('products')
+    .insert({
+      title:          name.trim(),   // canonical field
+      name:           name.trim(),   // kept in sync via trigger
+      description:    description?.trim() || null,
+      price:          Number(price),
+      original_price: original_price ? Number(original_price) : null,
+      category:       category.trim(),
+      stock:          Number(stock),
+      image_url:      image_url?.trim() || null,
+      seller_id:      user.id,
+      is_new:         true,
+      is_featured:    false,
+      is_active:      true,
+      rating:         0,
+      review_count:   0,
+      num_reviews:    0,
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data, { status: 201 })
 }

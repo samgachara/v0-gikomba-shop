@@ -1,36 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
-import { handleError, logInfo } from '@/lib/api-error'
+import { z } from 'zod'
+import { getAuthUser, ok, fail } from '@/lib/api-handler'
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    logInfo('Fetching product', { id })
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { supabase } = await getAuthUser()
+  const { id } = await params
 
-    const supabase = await createClient()
+  if (!z.string().uuid().safeParse(id).success) return fail('Invalid product ID', 400)
 
-    const { data, error } = await supabase
-      .from('products')
-      .select(
-        `*,
-         seller:sellers(id, store_name, verified, logo_url, location, description),
-         reviews:product_reviews(id, rating, comment, created_at,
-           user:profiles(id, first_name, last_name, avatar_url)
-         )`
-      )
-      .eq('id', id)
-      .eq('is_active', true)
-      .single()
-
-    if (error || !data) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-
-    return NextResponse.json(data)
-  } catch (error) {
-    return handleError(error)
-  }
+  const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
+  if (error || !data) return fail('Product not found', 404)
+  return ok(data)
 }

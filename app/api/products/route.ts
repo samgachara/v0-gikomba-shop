@@ -1,77 +1,46 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
-import { handleError, logInfo } from '@/lib/api-error'
+import { ok, fail, sanitizeSearch, parsePagination, getAuthUser } from '@/lib/api-handler'
 
-// GET /api/products — public product listing with pagination, search, and filters
+const VALID_CATEGORIES = ['women', 'men', 'electronics', 'home', 'kids', 'accessories']
+const VALID_SORTS = ['newest', 'price_asc', 'price_desc', 'popular']
+
 export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category')
-    const featured = searchParams.get('featured')
-    const search = searchParams.get('search')
-    const filter = searchParams.get('filter') // 'new' | 'sale' | 'bestsellers'
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
-    const page = searchParams.get('page')
-    const offset = page
-      ? (parseInt(page) - 1) * limit
-      : parseInt(searchParams.get('offset') || '0')
+  const { supabase } = await getAuthUser()
+  const { searchParams } = new URL(request.url)
+  const category = searchParams.get('category')
+  const featured = searchParams.get('featured')
+  const rawSearch = searchParams.get('search')
+  const sort = searchParams.get('sort') || 'newest'
+  const minPrice = searchParams.get('min_price')
+  const maxPrice = searchParams.get('max_price')
+  const { limit, offset } = parsePagination(searchParams)
 
-    logInfo('Fetching products', { category, featured, search, filter, limit, offset })
+  let query = supabase
+    .from('products')
+    .select('*', { count: 'exact' })
+    .range(offset, offset + limit - 1)
 
-    const supabase = await createClient()
+  // Sorting
+  if (!VALID_SORTS.includes(sort)) return fail('Invalid sort', 400)
+  if (sort === 'price_asc')  query = query.order('price', { ascending: true })
+  else if (sort === 'price_desc') query = query.order('price', { ascending: false })
+  else if (sort === 'popular') query = query.order('review_count', { ascending: false })
+  else query = query.order('created_at', { ascending: false }) // newest
 
-    // products.seller_id → sellers (not vendors — matches live schema)
-    let query = supabase
-      .from('products')
-      .select(
-        `id, title, name, description, price, original_price, image_url, images,
-         category, stock, rating, review_count, num_reviews, is_featured, is_new,
-         condition, tags, created_at,
-         seller:sellers(id, store_name, verified, logo_url)`,
-        { count: 'exact' }
-      )
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-
-    if (category && category !== 'all') {
-      query = query.eq('category', category)
-    }
-
-    if (featured === 'true' || filter === 'bestsellers') {
-      query = query.eq('is_featured', true)
-    }
-
-    if (filter === 'new') {
-      query = query.eq('is_new', true)
-    }
-
-    if (filter === 'sale') {
-      query = query.not('original_price', 'is', null)
-    }
-
-    if (search) {
-      // products have both title and name columns — search both
-      query = query.or(
-        `title.ilike.%${search}%,name.ilike.%${search}%,description.ilike.%${search}%`
-      )
-    }
-
-    query = query.range(offset, offset + limit - 1)
-
-    const { data, error, count } = await query
-
-    if (error) throw error
-
-    return NextResponse.json({
-      data,
-      pagination: {
-        total: count,
-        limit,
-        offset,
-        page: page ? parseInt(page) : Math.floor(offset / limit) + 1,
-      },
-    })
-  } catch (error) {
-    return handleError(error)
+  // Filters
+  if (category && category !== 'all') {
+    if (!VALID_CATEGORIES.includes(category)) return fail('Invalid category', 400)
+    query = query.eq('category', category)
   }
+  if (featured === 'true') query = query.eq('is_featured', true)
+  if (minPrice) query = query.gte('price', Number(minPrice))
+  if (maxPrice) query = query.lte('price', Number(maxPrice))
+  if (rawSearch) {
+    const search = sanitizeSearch(rawSearch)
+    if (search.length > 0)
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
+  }
+
+  const { data, error, count } = await query
+  if (error) { console.error('[products/GET]', error.message); return fail('Failed to fetch products', 500) }
+  return ok({ products: data, total: count, limit, offset })
 }

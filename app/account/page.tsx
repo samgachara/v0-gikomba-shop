@@ -1,17 +1,24 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { User, Package, Heart, Settings, LogOut, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useAuth } from "@/lib/auth-context"
-import { createClient } from "@/lib/supabase/client"
-import { Header } from "@/components/header"
-import type { Profile } from "@/lib/types"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { User, Package, Heart, LogOut, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useAuth } from '@/lib/auth-context'
+import { createClient } from '@/lib/supabase/client'
+import { Header } from '@/components/header'
+import type { Profile } from '@/lib/types'
 
 export default function AccountPage() {
   const { user, loading: authLoading, signOut } = useAuth()
@@ -32,19 +39,22 @@ export default function AccountPage() {
       router.push('/auth/login')
       return
     }
-
-    if (user) {
-      fetchProfile()
-    }
+    if (user) fetchProfile()
   }, [user, authLoading, router])
 
   const fetchProfile = async () => {
     const supabase = createClient()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user!.id)
       .single()
+
+    if (error) {
+      toast.error('Failed to load profile')
+      setLoading(false)
+      return
+    }
 
     if (data) {
       setProfile(data)
@@ -56,22 +66,39 @@ export default function AccountPage() {
         city: data.city || '',
       })
     }
+
     setLoading(false)
   }
 
   const handleSave = async () => {
+    // Basic validation
+    if (!formData.first_name.trim() || !formData.last_name.trim()) {
+      toast.error('First and last name are required')
+      return
+    }
+
+    if (formData.phone && !/^\+?[0-9\s\-().]{7,20}$/.test(formData.phone)) {
+      toast.error('Please enter a valid phone number')
+      return
+    }
+
     setSaving(true)
+
     const supabase = createClient()
-    
-    await supabase
-      .from('profiles')
-      .upsert({
-        id: user!.id,
-        ...formData,
-        updated_at: new Date().toISOString(),
-      })
+    const { error } = await supabase.from('profiles').upsert({
+      id: user!.id,
+      ...formData,
+      updated_at: new Date().toISOString(),
+    })
 
     setSaving(false)
+
+    if (error) {
+      toast.error('Failed to save profile. Please try again.')
+      return
+    }
+
+    toast.success('Profile updated successfully')
   }
 
   if (authLoading || loading) {
@@ -89,9 +116,7 @@ export default function AccountPage() {
     )
   }
 
-  if (!user) {
-    return null
-  }
+  if (!user) return null
 
   return (
     <>
@@ -99,14 +124,14 @@ export default function AccountPage() {
       <main className="min-h-screen bg-background py-8">
         <div className="mx-auto max-w-4xl px-4">
           <h1 className="text-3xl font-bold mb-8">My Account</h1>
-
           <div className="grid gap-6 md:grid-cols-3">
+
             {/* Sidebar */}
             <div className="md:col-span-1">
               <Card>
                 <CardContent className="p-4">
                   <nav className="space-y-2">
-                    <Button variant="ghost" className="w-full justify-start gap-2" asChild>
+                    <Button variant="secondary" className="w-full justify-start gap-2" asChild>
                       <Link href="/account">
                         <User className="h-4 w-4" />
                         Profile
@@ -124,8 +149,8 @@ export default function AccountPage() {
                         Wishlist
                       </Link>
                     </Button>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       className="w-full justify-start gap-2 text-destructive hover:text-destructive"
                       onClick={signOut}
                     >
@@ -137,7 +162,7 @@ export default function AccountPage() {
               </Card>
             </div>
 
-            {/* Main Content */}
+            {/* Profile Form */}
             <div className="md:col-span-2">
               <Card>
                 <CardHeader>
@@ -153,7 +178,10 @@ export default function AccountPage() {
                       <Input
                         id="first_name"
                         value={formData.first_name}
-                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, first_name: e.target.value })
+                        }
+                        placeholder="John"
                       />
                     </div>
                     <div className="space-y-2">
@@ -161,7 +189,10 @@ export default function AccountPage() {
                       <Input
                         id="last_name"
                         value={formData.last_name}
-                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, last_name: e.target.value })
+                        }
+                        placeholder="Doe"
                       />
                     </div>
                   </div>
@@ -174,6 +205,9 @@ export default function AccountPage() {
                       disabled
                       className="bg-muted"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Email cannot be changed here
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -181,7 +215,9 @@ export default function AccountPage() {
                     <Input
                       id="phone"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
                       placeholder="+254 7XX XXX XXX"
                     />
                   </div>
@@ -191,7 +227,9 @@ export default function AccountPage() {
                     <Input
                       id="address"
                       value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
                       placeholder="Street address, building, floor"
                     />
                   </div>
@@ -201,7 +239,9 @@ export default function AccountPage() {
                     <Input
                       id="city"
                       value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, city: e.target.value })
+                      }
                       placeholder="Nairobi"
                     />
                   </div>

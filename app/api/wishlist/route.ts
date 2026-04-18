@@ -1,16 +1,12 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
-import { AddToWishlistSchema, DeleteWishlistItemSchema } from '@/lib/validations'
-import { handleError, logInfo } from '@/lib/api-error'
+import { z } from 'zod'
+import { getAuthUser, ok, fail, parseBody } from '@/lib/api-handler'
+
+const schema = z.object({ product_id: z.string().uuid('Invalid product ID') })
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    logInfo('Fetching wishlist', { user_id: user.id })
+    const { user, supabase } = await getAuthUser()
+    if (!user) return fail('Unauthorized', 401)
 
     const { data, error } = await supabase
       .from('wishlist_items')
@@ -18,85 +14,86 @@ export async function GET() {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('[wishlist/GET] Database error:', error.message)
+      // If the join fails, try without the join to see if it's a relationship issue
+      const { data: simpleData, error: simpleError } = await supabase
+        .from('wishlist_items')
+        .select('*')
+        .eq('user_id', user.id)
+      
+      if (simpleError) {
+        return fail(`Database error: ${simpleError.message}`, 500)
+      }
+      return ok(simpleData)
+    }
 
-    return NextResponse.json(data)
-  } catch (error) {
-    return handleError(error)
+    return ok(data)
+  } catch (err) {
+    console.error('[wishlist/GET] Unexpected error:', err)
+    return fail('An unexpected error occurred', 500)
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user, supabase } = await getAuthUser()
+    if (!user) return fail('Unauthorized', 401)
 
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { data: body, error: bodyErr } = await parseBody(request, schema)
+    if (bodyErr) return bodyErr
 
-    const body = await request.json()
-    const { product_id } = AddToWishlistSchema.parse(body)
-
-    logInfo('Adding to wishlist', { user_id: user.id, product_id })
-
-    // Confirm product exists
     const { data: product } = await supabase
       .from('products')
       .select('id')
-      .eq('id', product_id)
-      .single()
+      .eq('id', body.product_id)
+      .maybeSingle()
 
-    if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-
-    // Check for duplicate
-    const { data: existing } = await supabase
-      .from('wishlist_items')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('product_id', product_id)
-      .single()
-
-    if (existing) {
-      return NextResponse.json({ error: 'Product already in wishlist' }, { status: 409 })
-    }
+    if (!product) return fail('Product not found', 404)
 
     const { data, error } = await supabase
       .from('wishlist_items')
-      .insert({ user_id: user.id, product_id })
+      .upsert(
+        { user_id: user.id, product_id: body.product_id },
+        { onConflict: 'user_id,product_id', ignoreDuplicates: true }
+      )
       .select('*, product:products(*)')
-      .single()
+      .maybeSingle()
 
-    if (error) throw error
+    if (error) {
+      console.error('[wishlist/POST] Database error:', error.message)
+      return fail(`Failed to add to wishlist: ${error.message}`, 500)
+    }
 
-    return NextResponse.json(data, { status: 201 })
-  } catch (error) {
-    return handleError(error)
+    return ok(data ?? { message: 'Already in wishlist' }, 201)
+  } catch (err) {
+    console.error('[wishlist/POST] Unexpected error:', err)
+    return fail('An unexpected error occurred', 500)
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user, supabase } = await getAuthUser()
+    if (!user) return fail('Unauthorized', 401)
 
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const body = await request.json()
-    const { product_id } = DeleteWishlistItemSchema.parse(body)
-
-    logInfo('Removing from wishlist', { user_id: user.id, product_id })
+    const { data: body, error: bodyErr } = await parseBody(request, schema)
+    if (bodyErr) return bodyErr
 
     const { error } = await supabase
       .from('wishlist_items')
       .delete()
       .eq('user_id', user.id)
-      .eq('product_id', product_id)
+      .eq('product_id', body.product_id)
 
-    if (error) throw error
+    if (error) {
+      console.error('[wishlist/DELETE] Database error:', error.message)
+      return fail(`Failed to remove from wishlist: ${error.message}`, 500)
+    }
 
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    return handleError(error)
+    return ok({ removed: true })
+  } catch (err) {
+    console.error('[wishlist/DELETE] Unexpected error:', err)
+    return fail('An unexpected error occurred', 500)
   }
 }

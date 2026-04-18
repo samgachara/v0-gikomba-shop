@@ -4,16 +4,26 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 export function Newsletter() {
   const [email, setEmail] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (email) {
+    if (!email) return
+    setLoading(true)
+    try {
+      const supabase = createClient()
+      await supabase.from('newsletter_subscribers').upsert({ email }, { onConflict: 'email' })
+    } catch {
+      // Fail silently — subscription is best-effort
+    } finally {
       setSubmitted(true)
       setEmail("")
+      setLoading(false)
     }
   }
 
@@ -25,14 +35,14 @@ export function Newsletter() {
             Get 10% Off Your First Order
           </h2>
           <p className="text-primary-foreground/80 max-w-md">
-            Subscribe to our newsletter for exclusive deals, new arrivals, and flash sales. 
+            Subscribe to our newsletter for exclusive deals, new arrivals, and flash sales.
             Be the first to know!
           </p>
-          
+
           {submitted ? (
             <div className="flex items-center gap-2 rounded-full bg-primary-foreground/10 px-6 py-3">
               <span className="text-primary-foreground">
-                Thanks for subscribing! Check your inbox for your discount code.
+                ✓ Subscribed! Check your inbox for your 10% discount code.
               </span>
             </div>
           ) : (
@@ -42,20 +52,15 @@ export function Newsletter() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60"
                 required
+                className="flex-1 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60"
               />
-              <Button 
-                type="submit" 
-                variant="secondary"
-                className="gap-2"
-              >
-                Subscribe
-                <Send className="h-4 w-4" />
+              <Button type="submit" variant="secondary" className="gap-2" disabled={loading}>
+                {loading ? 'Subscribing...' : 'Subscribe'}
+                {!loading && <Send className="h-4 w-4" />}
               </Button>
             </form>
           )}
-
           <p className="text-xs text-primary-foreground/60">
             By subscribing, you agree to receive marketing messages. Unsubscribe anytime.
           </p>

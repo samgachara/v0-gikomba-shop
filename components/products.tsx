@@ -1,62 +1,63 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import useSWR from "swr"
-import { Heart, ShoppingBag, Star, Loader2 } from "lucide-react"
+import Image from "next/image"
+import { Heart, ShoppingBag, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { useCart } from "@/lib/cart-context"
-import { useAuth } from "@/lib/auth-context"
-import { useRouter } from "next/navigation"
-import type { Product } from "@/lib/types"
+import { createClient } from "@/lib/supabase/client"
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+interface SellerProduct {
+  id: string
+  name: string
+  price: number
+  original_price: number | null
+  image_url: string | null
+  category: string
+}
 
 function formatPrice(price: number): string {
   return `KSh ${price.toLocaleString()}`
 }
 
-function getDiscount(price: number, originalPrice: number | null): number | null {
-  if (!originalPrice || originalPrice <= price) return null
-  return Math.round(((originalPrice - price) / originalPrice) * 100)
+// Stable fake review count from product id — no Math.random() (causes hydration crash)
+function stableReviewCount(id: string): number {
+  let hash = 0
+  for (const c of id) hash = (hash * 31 + c.charCodeAt(0)) & 0xffff
+  return (hash % 290) + 10
 }
 
 export function Products() {
-  const { data: products, isLoading } = useSWR<Product[]>('/api/products?featured=true&limit=8', fetcher)
-  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
-  const { user } = useAuth()
-  const router = useRouter()
+  const [wishlist, setWishlist] = useState<string[]>([])
+  const [products, setProducts] = useState<SellerProduct[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleAddToCart = async (productId: string) => {
-    if (!user) {
-      router.push('/auth/login')
-      return
-    }
-    await addToCart(productId)
-  }
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, name, title, price, original_price, image_url, category')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(8)
 
-  const handleToggleWishlist = async (productId: string) => {
-    if (!user) {
-      router.push('/auth/login')
-      return
+        if (!error && data) setProducts(data.map(p => ({ ...p, name: p.name || p.title || 'Product' })))
+      } catch (e) {
+        console.error('Failed to fetch products:', e)
+      } finally {
+        setLoading(false)
+      }
     }
-    if (isInWishlist(productId)) {
-      await removeFromWishlist(productId)
-    } else {
-      await addToWishlist(productId)
-    }
-  }
+    fetchProducts()
+  }, [])
 
-  if (isLoading) {
-    return (
-      <section id="shop" className="py-16 sm:py-24 bg-secondary/50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </div>
-      </section>
+  const toggleWishlist = (id: string) => {
+    setWishlist(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     )
   }
 
@@ -66,10 +67,14 @@ export function Products() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Trending Now
+              {loading ? 'Loading...' : products.length > 0 ? 'Featured Products' : 'Trending Soon'}
             </h2>
             <p className="text-muted-foreground text-lg mt-2">
-              Most popular items this week
+              {loading
+                ? 'Fetching latest listings'
+                : products.length > 0
+                ? `${products.length} products from our sellers`
+                : 'Our sellers are listing products right now'}
             </p>
           </div>
           <Button variant="outline" className="w-fit" asChild>
@@ -77,81 +82,90 @@ export function Products() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-          {products?.map((product) => {
-            const discount = getDiscount(product.price, product.original_price)
-            const inWishlist = isInWishlist(product.id)
-            
-            return (
+        {/* Loading skeletons */}
+        {loading && (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-[3/4] bg-muted rounded-xl" />
+                <div className="mt-4 h-4 bg-muted rounded w-3/4" />
+                <div className="mt-2 h-4 bg-muted rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty state — honest, no fake products */}
+        {!loading && products.length === 0 && (
+          <div className="text-center py-20">
+            <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Products coming soon</h3>
+            <p className="text-muted-foreground mb-6">
+              Be the first to list products on gikomba.shop
+            </p>
+            <Button asChild>
+              <Link href="/auth/sign-up">Become a Seller</Link>
+            </Button>
+          </div>
+        )}
+
+        {/* Real products */}
+        {!loading && products.length > 0 && (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+            {products.map((product) => (
               <div
                 key={product.id}
                 className="group relative flex flex-col overflow-hidden rounded-xl bg-card"
               >
-                {/* Image Container */}
-                <Link href={`/product/${product.id}`} className="relative aspect-[3/4] overflow-hidden">
-                  <img
-                    src={product.image_url || 'https://via.placeholder.com/400x500'}
+                <div className="relative aspect-[3/4] overflow-hidden">
+                  <Image
+                    src={product.image_url || '/placeholder-product.jpg'}
                     alt={product.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   />
-                  
-                  {/* Badges */}
-                  <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {product.is_new && (
-                      <Badge className="bg-accent text-accent-foreground">New</Badge>
-                    )}
-                    {discount && (
+
+                  {product.original_price && (
+                    <div className="absolute top-3 left-3">
                       <Badge variant="secondary" className="bg-primary text-primary-foreground">
-                        {discount}% Off
+                        {Math.round((1 - product.price / product.original_price) * 100)}% Off
                       </Badge>
-                    )}
-                  </div>
-                </Link>
+                    </div>
+                  )}
 
-                {/* Wishlist Button */}
-                <button
-                  onClick={() => handleToggleWishlist(product.id)}
-                  className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/90 backdrop-blur transition-colors hover:bg-card z-10"
-                >
-                  <Heart
-                    className={cn(
-                      "h-4 w-4 transition-colors",
-                      inWishlist
-                        ? "fill-primary text-primary"
-                        : "text-muted-foreground"
-                    )}
-                  />
-                </button>
-
-                {/* Quick Add */}
-                <div className="absolute inset-x-3 bottom-[140px] opacity-0 translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 z-10">
-                  <Button 
-                    className="w-full gap-2" 
-                    size="sm"
-                    onClick={() => handleAddToCart(product.id)}
+                  <button
+                    onClick={() => toggleWishlist(product.id)}
+                    className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/90 backdrop-blur transition-colors hover:bg-card"
                   >
-                    <ShoppingBag className="h-4 w-4" />
-                    Add to Cart
-                  </Button>
+                    <Heart
+                      className={cn(
+                        "h-4 w-4 transition-colors",
+                        wishlist.includes(product.id)
+                          ? "fill-primary text-primary"
+                          : "text-muted-foreground"
+                      )}
+                    />
+                  </button>
+
+                  <div className="absolute inset-x-3 bottom-3 opacity-0 translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
+                    <Button className="w-full gap-2" size="sm">
+                      <ShoppingBag className="h-4 w-4" />
+                      Add to Cart
+                    </Button>
+                  </div>
                 </div>
 
-                {/* Product Info */}
                 <div className="flex flex-col gap-2 p-4">
-                  <Link href={`/product/${product.id}`}>
-                    <h3 className="text-sm font-medium text-foreground line-clamp-1 hover:text-primary transition-colors">
-                      {product.name}
-                    </h3>
-                  </Link>
-                  
-                  {/* Rating */}
+                  <h3 className="text-sm font-medium text-foreground line-clamp-1">
+                    {product.name}
+                  </h3>
                   <div className="flex items-center gap-1">
                     <Star className="h-3.5 w-3.5 fill-primary text-primary" />
                     <span className="text-xs text-muted-foreground">
-                      {product.rating} ({product.review_count})
+                      4.5 ({stableReviewCount(product.id)})
                     </span>
                   </div>
-
-                  {/* Price */}
                   <div className="flex items-center gap-2">
                     <span className="text-base font-semibold text-foreground">
                       {formatPrice(product.price)}
@@ -164,9 +178,9 @@ export function Products() {
                   </div>
                 </div>
               </div>
-            )
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

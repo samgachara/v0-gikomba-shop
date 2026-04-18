@@ -1,46 +1,45 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { handleError, logInfo } from '@/lib/api-error'
 
-// GET /api/seller/orders — orders for the authenticated seller's products
-export async function GET(request: Request) {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Get this seller's product IDs
+  const { data: products } = await supabase
+    .from('products')
+    .select('id, name')
+    .eq('seller_id', user.id)
 
-    const { searchParams } = new URL(request.url)
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
-    const offset = parseInt(searchParams.get('offset') || '0')
-    const status = searchParams.get('status')
+  const productIds = (products ?? []).map(p => p.id)
 
-    logInfo('Seller fetching orders', { seller_id: user.id })
+  if (productIds.length === 0) return NextResponse.json([])
 
-    // orders.seller_id references sellers.id — matches live schema
-    let query = supabase
-      .from('orders')
-      .select(
-        `id, status, total, payment_status, payment_method, created_at,
-         shipping_address, shipping_city, phone,
-         items:order_items(*, product:products(title, name, image_url, price)),
-         buyer:profiles!orders_buyer_id_fkey(id, first_name, last_name, phone)`,
-        { count: 'exact' }
-      )
-      .eq('seller_id', user.id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+  // Get order items for seller's products
+  const { data: orderItems } = await supabase
+    .from('order_items')
+    .select('*, product:products(name, image_url)')
+    .in('product_id', productIds)
 
-    if (status) {
-      query = query.eq('status', status)
-    }
+  const orderIds = [...new Set((orderItems ?? []).map(i => i.order_id))]
 
-    const { data, error, count } = await query
+  if (orderIds.length === 0) return NextResponse.json([])
 
-    if (error) throw error
+  // Get the actual orders
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('*')
+    .in('id', orderIds)
+    .order('created_at', { ascending: false })
 
-    return NextResponse.json({ data, pagination: { total: count, limit, offset } })
-  } catch (error) {
-    return handleError(error)
-  }
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Attach only the seller's items to each order
+  const result = (orders ?? []).map(order => ({
+    ...order,
+    items: (orderItems ?? []).filter(i => i.order_id === order.id),
+  }))
+
+  return NextResponse.json(result)
 }
