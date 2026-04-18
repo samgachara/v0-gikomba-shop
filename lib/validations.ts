@@ -92,3 +92,48 @@ export type CreateOrderInput = z.infer<typeof orderSchema>
 export type ProductQueryInput = z.infer<typeof productQuerySchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type SignUpInput = z.infer<typeof signUpSchema>
+
+// ─── Seller schemas ───────────────────────────────────────────────────────────
+
+export const RegisterSellerSchema = z.object({
+  store_name:  z.string().min(2, 'Store name must be at least 2 characters').max(100),
+  description: z.string().max(1000).optional(),
+  location:    z.string().max(200).optional(),
+  phone:       phoneSchema.optional(),
+  logo_url:    z.string().url('Invalid logo URL').optional().or(z.literal('')),
+})
+
+export const UpdateSellerSchema = RegisterSellerSchema.partial()
+
+// Admin: approve / reject / verify a seller
+export const ApproveSelllerSchema = z.object({
+  seller_id: z.string().uuid('Invalid seller ID'),
+  status:    z.enum(['active', 'suspended', 'pending']),
+  verified:  z.boolean().optional(),
+})
+
+// ─── M-Pesa STK Push callback (Safaricom format) ─────────────────────────────
+
+export const MpesaCallbackSchema = z.object({
+  Body: z.object({
+    stkCallback: z.object({
+      MerchantRequestID: z.string(),
+      CheckoutRequestID: z.string(),
+      ResultCode:        z.number(),
+      ResultDesc:        z.string(),
+      CallbackMetadata:  z.object({
+        Item: z.array(
+          z.object({
+            Name:  z.string(),
+            Value: z.union([z.string(), z.number()]).optional(),
+          })
+        ),
+      }).optional(),
+    }),
+  }),
+})
+
+export type RegisterSellerInput = z.infer<typeof RegisterSellerSchema>
+export type UpdateSellerInput   = z.infer<typeof UpdateSellerSchema>
+export type ApproveSelllerInput = z.infer<typeof ApproveSelllerSchema>
+export type MpesaCallbackInput  = z.infer<typeof MpesaCallbackSchema>
