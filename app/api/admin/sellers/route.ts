@@ -70,13 +70,16 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { seller_id, status } = ApproveSelllerSchema.parse(body)
+    const { seller_id, status, verified } = ApproveSelllerSchema.parse(body)
 
     logInfo('Admin updating seller status', { seller_id, status, by: user.id })
 
+    const updatePayload: Record<string, unknown> = { status, updated_at: new Date().toISOString() }
+    if (verified !== undefined) updatePayload.verified = verified
+
     const { data, error } = await supabase
       .from('sellers')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq('id', seller_id)
       .select()
       .single()
@@ -86,7 +89,7 @@ export async function PATCH(request: Request) {
     }
 
     // If approved, ensure profile role is 'seller'
-    if (status === 'approved') {
+    if (status === 'active') {
       await supabase
         .from('profiles')
         .update({ role: 'seller' })
