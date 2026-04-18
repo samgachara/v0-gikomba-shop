@@ -1,5 +1,9 @@
 'use client'
 
+// Force dynamic rendering — prevents SSR pre-render that throws
+// "location is not defined" (browser global used in payment SDK deps)
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
