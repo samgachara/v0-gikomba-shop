@@ -20,7 +20,7 @@ export async function GET(
                  rating, review_count, condition, is_active)
       `)
       .eq('id', id)
-      .eq('status', 'approved')
+      .eq('status', 'active')
       .single()
 
     if (error || !data) {

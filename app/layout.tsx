@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/lib/auth-context'
 import { CartProvider } from '@/lib/cart-context'
 import { Toaster } from '@/components/ui/sonner'
+import { WhatsAppButton } from '@/components/whatsapp-button'
 import './globals.css'
 
 const dmSans = DM_Sans({
@@ -73,6 +74,7 @@ export default function RootLayout({
             {children}
             <Analytics />
             <Toaster position="top-right" richColors />
+            <WhatsAppButton />
           </CartProvider>
         </AuthProvider>
       </body>

@@ -1,149 +1,150 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Loader2, Star, Package, MapPin } from 'lucide-react'
-import type { Vendor, Product } from '@/lib/types'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, Package, MapPin, ShieldCheck, MessageCircle } from 'lucide-react'
+import type { Product } from '@/lib/types'
 
-export default function VendorProfile() {
+interface Seller {
+  id: string
+  store_name: string
+  description: string | null
+  logo_url: string | null
+  location: string | null
+  verified: boolean
+  created_at: string
+  products: Product[]
+}
+
+function fmt(n: number) { return `KSh ${n.toLocaleString()}` }
+
+export default function SellerStorePage() {
   const params = useParams()
-  const vendorId = params.id as string
+  const sellerId = params.id as string
 
-  const [vendor, setVendor] = useState<Vendor | null>(null)
-  const [products, setProducts] = useState<Product[]>([])
+  const [seller, setSeller]   = useState<Seller | null>(null)
   const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    fetchVendor()
-  }, [vendorId])
-
-  const fetchVendor = async () => {
-    try {
-      const res = await fetch(`/api/vendors/${vendorId}`)
-      if (res.ok) {
-        const vendorData = await res.json()
-        setVendor(vendorData)
-        
-        // Fetch vendor's products
-        const productsRes = await fetch(`/api/products?vendor=${vendorId}`)
-        if (productsRes.ok) {
-          const productsData = await productsRes.json()
-          setProducts(productsData.data || [])
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching vendor:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+    fetch(`/api/sellers/${sellerId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) setSeller(data)
+        else setNotFound(true)
+        setLoading(false)
+      })
+      .catch(() => { setNotFound(true); setLoading(false) })
+  }, [sellerId])
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="flex items-center justify-center h-96">
-          <Loader2 className="animate-spin" />
+          <Loader2 className="animate-spin h-8 w-8 text-primary" />
         </main>
       </div>
     )
   }
 
-  if (!vendor) {
+  if (notFound || !seller) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="max-w-6xl mx-auto px-4 py-12 text-center">
-          <h1 className="text-2xl font-bold mb-4">Vendor Not Found</h1>
-          <p className="text-foreground/60 mb-6">This vendor account does not exist</p>
-          <Link href="/shop">
-            <Button>Back to Shop</Button>
-          </Link>
+        <main className="flex flex-col items-center justify-center h-96 gap-4">
+          <Package className="h-12 w-12 text-muted-foreground" />
+          <h1 className="text-2xl font-bold">Seller not found</h1>
+          <p className="text-muted-foreground">This store doesn't exist or is no longer active.</p>
+          <Button asChild><Link href="/shop">Browse Products</Link></Button>
         </main>
       </div>
     )
   }
+
+  const waNumber = '254736906440'
+  const waMsg = encodeURIComponent(`Hi ${seller.store_name}! I found your store on gikomba.shop and I'm interested in your products.`)
+  const activeProducts = (seller.products ?? []).filter(p => p.is_active !== false)
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        {/* Vendor Header */}
-        <div className="mb-12">
-          <div className="flex gap-8 items-start mb-8">
-            {vendor.shop_image_url && (
-              <img 
-                src={vendor.shop_image_url}
-                alt={vendor.shop_name}
-                className="w-24 h-24 rounded-lg object-cover"
-              />
+      <main className="max-w-5xl mx-auto px-4 py-12">
+
+        {/* Store header */}
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl border p-8 mb-8 flex flex-col sm:flex-row items-start gap-6">
+          <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-3xl font-bold text-primary">
+            {seller.logo_url
+              ? <img src={seller.logo_url} alt={seller.store_name} className="w-full h-full object-cover rounded-2xl" />
+              : seller.store_name.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h1 className="text-2xl font-bold">{seller.store_name}</h1>
+              {seller.verified && (
+                <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  <ShieldCheck className="h-3 w-3" />Verified Seller
+                </span>
+              )}
+            </div>
+            {seller.location && (
+              <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
+                <MapPin className="h-3 w-3" />{seller.location}
+              </p>
             )}
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{vendor.shop_name}</h1>
-              <p className="text-foreground/60 mb-4">{vendor.shop_description}</p>
-              
-              {/* Vendor Stats */}
-              <div className="flex gap-6 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <Star className="text-yellow-500" size={20} />
-                  <span className="font-medium">{vendor.rating.toFixed(1)} Rating</span>
-                  <span className="text-foreground/60">({vendor.review_count} reviews)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Package className="text-blue-600" size={20} />
-                  <span className="font-medium">{vendor.total_orders} Orders</span>
-                </div>
-              </div>
+            {seller.description && (
+              <p className="text-sm text-muted-foreground mb-4">{seller.description}</p>
+            )}
+            <div className="flex items-center gap-3">
+              <Badge variant="outline">{activeProducts.length} product{activeProducts.length !== 1 ? 's' : ''}</Badge>
+              <a
+                href={`https://wa.me/${waNumber}?text=${waMsg}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: '#25D366' }}
+              >
+                <MessageCircle className="h-4 w-4" />
+                Chat with Seller
+              </a>
             </div>
           </div>
         </div>
 
-        {/* Products */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-6">Products from {vendor.shop_name}</h2>
-          
-          {products.length === 0 ? (
-            <Card className="p-12 text-center">
-              <Package size={48} className="mx-auto text-foreground/30 mb-4" />
-              <p className="text-foreground/60">No products available</p>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <Link key={product.id} href={`/product/${product.id}`}>
-                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer overflow-hidden">
-                    {product.image_url && (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-48 object-cover"
-                      />
-                    )}
-                    <div className="p-4">
-                      <h3 className="font-bold line-clamp-2 mb-2">{product.name}</h3>
-                      <p className="text-sm text-foreground/60 mb-3 line-clamp-2">{product.description}</p>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-foreground/60">Price</p>
-                          <p className="text-lg font-bold">KSh {product.price.toLocaleString()}</p>
-                        </div>
-                        {product.stock > 0 ? (
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">In Stock</span>
-                        ) : (
-                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Out of Stock</span>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Products grid */}
+        <h2 className="text-xl font-semibold mb-4">Products from {seller.store_name}</h2>
+        {activeProducts.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground">
+            <Package className="h-10 w-10 mx-auto mb-3" />
+            <p>This seller hasn't listed any products yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {activeProducts.map(product => (
+              <Link key={product.id} href={`/product/${product.id}`}>
+                <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+                  <div className="aspect-square bg-muted overflow-hidden">
+                    {product.image_url
+                      ? <img src={product.image_url} alt={product.title || product.name} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-muted-foreground" /></div>}
+                  </div>
+                  <CardContent className="p-3">
+                    <p className="text-sm font-medium line-clamp-2">{product.title || product.name}</p>
+                    <p className="text-sm font-bold mt-1">{fmt(product.price)}</p>
+                    {product.stock === 0 && <p className="text-xs text-red-500 mt-0.5">Out of stock</p>}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   )
