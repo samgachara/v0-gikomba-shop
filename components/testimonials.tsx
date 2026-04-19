@@ -38,7 +38,7 @@ export function Testimonials() {
             Loved by Kenyans
           </h2>
           <p className="mt-2 text-lg text-muted-foreground">
-            Join thousands of happy customers across the country
+            Real stories from our early customers
           </p>
         </div>
 
@@ -48,19 +48,14 @@ export function Testimonials() {
               key={testimonial.id}
               className="flex flex-col gap-4 rounded-xl bg-card p-6 shadow-sm"
             >
-              {/* Stars */}
               <div className="flex gap-1">
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <Star key={i} className="h-4 w-4 fill-primary text-primary" />
                 ))}
               </div>
-
-              {/* Content */}
               <p className="text-foreground leading-relaxed flex-1">
                 &ldquo;{testimonial.content}&rdquo;
               </p>
-
-              {/* Author */}
               <div className="flex items-center gap-3 pt-2 border-t border-border">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold">
                   {testimonial.avatar}
@@ -74,23 +69,19 @@ export function Testimonials() {
           ))}
         </div>
 
-        {/* Stats */}
-        <div className="mt-16 grid grid-cols-2 gap-8 sm:grid-cols-4">
-          <div className="text-center">
-            <p className="text-3xl font-bold text-primary sm:text-4xl">50K+</p>
-            <p className="mt-1 text-sm text-muted-foreground">Happy Customers</p>
+        {/* Honest trust signals — no fake numbers */}
+        <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="text-center p-6 rounded-xl bg-card">
+            <p className="text-3xl font-bold text-primary sm:text-4xl">M-Pesa</p>
+            <p className="mt-1 text-sm text-muted-foreground">Seamless payments</p>
           </div>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-primary sm:text-4xl">10K+</p>
-            <p className="mt-1 text-sm text-muted-foreground">Products</p>
-          </div>
-          <div className="text-center">
+          <div className="text-center p-6 rounded-xl bg-card">
             <p className="text-3xl font-bold text-primary sm:text-4xl">47</p>
-            <p className="mt-1 text-sm text-muted-foreground">Counties Served</p>
+            <p className="mt-1 text-sm text-muted-foreground">Counties we deliver to</p>
           </div>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-primary sm:text-4xl">4.9</p>
-            <p className="mt-1 text-sm text-muted-foreground">Average Rating</p>
+          <div className="text-center p-6 rounded-xl bg-card">
+            <p className="text-3xl font-bold text-primary sm:text-4xl">24–48h</p>
+            <p className="mt-1 text-sm text-muted-foreground">Typical delivery time</p>
           </div>
         </div>
       </div>
