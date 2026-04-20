@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       .from('sellers')
       .select(
         `id, store_name, description, status, verified, phone, location, logo_url, created_at,
-         profile:profiles!sellers_id_fkey(id, first_name, last_name, role)`,
+         profiles:profiles!sellers_id_fkey(id, first_name, last_name, phone, role)`,
         { count: 'exact' }
       )
       .order('created_at', { ascending: false })
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 
     if (error) throw error
 
-    return NextResponse.json({ data, pagination: { total: count, limit, offset } })
+    return NextResponse.json({ sellers: data ?? [], pagination: { total: count ?? 0, limit, offset } })
   } catch (error) {
     return handleError(error)
   }

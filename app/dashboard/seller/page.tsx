@@ -408,9 +408,26 @@ export default function SellerDashboardPage() {
                           <Input id="original_price" type="number" min="0" step="0.01" placeholder="Shows as crossed-out price" value={form.original_price} onChange={e => setForm(f => ({ ...f, original_price: e.target.value }))} />
                         </div>
                         <div className="md:col-span-2 space-y-2">
-                          <Label htmlFor="image_url">Image URL <span className="text-muted-foreground text-xs">optional</span></Label>
-                          <Input id="image_url" type="url" placeholder="https://..." value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} />
-                          <p className="text-xs text-muted-foreground">Paste a direct image URL. You can use <a href="https://imgur.com" target="_blank" rel="noreferrer" className="underline">Imgur</a> to host images for free.</p>
+                          <Label>Product Image <span className="text-muted-foreground text-xs">optional</span></Label>
+                          <div className="flex items-center gap-3 mb-1">
+                            <input type="file" accept="image/*" id="dash-img-upload" className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0]
+                                if (!file) return
+                                const fd = new FormData()
+                                fd.append('file', file)
+                                const res = await fetch('/api/upload', { method: 'POST', body: fd })
+                                const data = await res.json()
+                                if (res.ok) setForm(f => ({ ...f, image_url: data.url }))
+                                else setFormError(data.error ?? 'Upload failed')
+                              }}
+                            />
+                            <label htmlFor="dash-img-upload" className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-input bg-background text-sm font-medium hover:bg-accent transition-colors">
+                              📁 Upload
+                            </label>
+                            {form.image_url && <img src={form.image_url} alt="Preview" className="h-9 w-9 rounded object-cover border flex-shrink-0" />}
+                          </div>
+                          <Input id="image_url" type="url" placeholder="or paste URL: https://i.imgur.com/..." value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} />
                         </div>
                       </div>
                       <div className="flex gap-3 pt-2">

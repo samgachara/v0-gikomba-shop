@@ -34,7 +34,7 @@ function getTimestamp(): string {
 }
 
 function getPassword(timestamp: string): string {
-  const shortcode = process.env.MPESA_SHORTCODE!
+  const shortcode = (process.env.MPESA_SHORTCODE ?? process.env.MPESA_BUSINESS_SHORT_CODE)!
   const passkey = process.env.MPESA_PASSKEY!
   return Buffer.from(`${shortcode}${passkey}${timestamp}`).toString('base64')
 }
@@ -67,13 +67,13 @@ export async function initiateStkPush(params: {
   const phone = normalizeMpesaPhone(params.phone)
 
   const body = {
-    BusinessShortCode: process.env.MPESA_SHORTCODE,
+    BusinessShortCode: process.env.MPESA_SHORTCODE ?? process.env.MPESA_BUSINESS_SHORT_CODE,
     Password: password,
     Timestamp: timestamp,
     TransactionType: 'CustomerPayBillOnline',
     Amount: Math.ceil(params.amount), // M-Pesa requires whole numbers
     PartyA: phone,
-    PartyB: process.env.MPESA_SHORTCODE,
+    PartyB: process.env.MPESA_SHORTCODE ?? process.env.MPESA_BUSINESS_SHORT_CODE,
     PhoneNumber: phone,
     CallBackURL: process.env.MPESA_CALLBACK_URL,
     AccountReference: `GKB-${params.orderId.slice(0, 8).toUpperCase()}`,

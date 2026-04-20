@@ -190,14 +190,43 @@ export default function NewProduct() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Image URL</label>
-            <Input
-              type="url"
-              name="image_url"
-              value={formData.image_url}
-              onChange={handleChange}
-              placeholder="https://..."
-            />
+            <label className="block text-sm font-medium mb-2">Product Image</label>
+            <div className="space-y-2">
+              {/* File upload */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="image-upload"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const fd = new FormData()
+                    fd.append('file', file)
+                    const res = await fetch('/api/upload', { method: 'POST', body: fd })
+                    const data = await res.json()
+                    if (res.ok) setFormData(prev => ({ ...prev, image_url: data.url }))
+                    else alert(data.error ?? 'Upload failed')
+                  }}
+                />
+                <label htmlFor="image-upload" className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background text-sm font-medium hover:bg-accent transition-colors">
+                  📁 Upload Image
+                </label>
+                {formData.image_url && (
+                  <img src={formData.image_url} alt="Preview" className="h-10 w-10 rounded object-cover border" />
+                )}
+              </div>
+              {/* OR paste URL */}
+              <p className="text-xs text-muted-foreground">or paste an image URL:</p>
+              <Input
+                type="url"
+                name="image_url"
+                value={formData.image_url}
+                onChange={handleChange}
+                placeholder="https://i.imgur.com/..."
+              />
+            </div>
           </div>
 
           <div className="flex gap-6">
