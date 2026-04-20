@@ -76,3 +76,27 @@ export interface OrderItem {
   created_at: string
   product?: Product
 }
+
+
+// Legacy alias — Vendor was renamed to Seller
+export interface Vendor {
+  id: string
+  shop_name: string
+  shop_description: string | null
+  status: string
+  created_at: string
+}
+
+export interface SellerEarnings {
+  id: string
+  seller_id: string
+  amount: number
+  net_amount: number
+  commission_amount: number
+  status: string
+  mpesa_phone: string | null
+  mpesa_receipt: string | null
+  period_start: string | null
+  period_end: string | null
+  created_at: string
+}
