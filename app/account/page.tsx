@@ -234,7 +234,7 @@ export default function AccountPage() {
                       ].map((item, i, arr) => (
                         <div key={item.label}>
                           {'href' in item ? (
-                            <Link href={item.href} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors">
+                            <Link href={item.href!} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors">
                               <item.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium">{item.label}</p>
