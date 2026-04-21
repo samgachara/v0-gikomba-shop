@@ -22,7 +22,7 @@ interface Review {
   rating: number
   comment: string
   created_at: string
-  profiles?: { first_name: string | null; last_name: string | null } | null
+  profiles?: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
 }
 
 interface Seller {
@@ -382,7 +382,8 @@ export default function ProductDetailPage() {
             ) : (
               <div className="space-y-6">
                 {reviews.map(review => {
-                  const name = [review.profiles?.first_name, review.profiles?.last_name]
+                  const p = Array.isArray(review.profiles) ? review.profiles[0] : review.profiles
+                  const name = [p?.first_name, p?.last_name]
                     .filter(Boolean).join(' ') || 'Anonymous'
                   return (
                     <div key={review.id} className="border-b border-border pb-6 last:border-0">
