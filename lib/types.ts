@@ -7,18 +7,22 @@ export interface ApiResponse<T> {
 export interface Product {
   id: string
   name: string
+  title?: string | null        // alias used in some DB rows — prefer name
   description: string | null
   price: number
-  original_price: number | null
+  original_price?: number | null
   image_url: string | null
   category: string
   stock: number
-  rating: number
-  review_count: number
-  is_featured: boolean
-  is_new: boolean
+  rating?: number
+  review_count?: number
+  num_reviews?: number
+  is_featured?: boolean
+  is_new?: boolean
+  is_active?: boolean
+  seller_id?: string | null
   created_at: string
-  updated_at: string
+  updated_at?: string
 }
 
 export interface Profile {

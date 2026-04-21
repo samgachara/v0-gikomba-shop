@@ -63,9 +63,9 @@ export default function SellerProductDetail() {
         </div>
         <div className="bg-white rounded-lg border p-8">
           {product.image_url && (
-            <img src={product.image_url} alt={product.title} className="w-full max-h-64 object-contain rounded mb-6" />
+            <img src={product.image_url} alt={product.name} className="w-full max-h-64 object-contain rounded mb-6" />
           )}
-          <h1 className="text-2xl font-bold mb-2">{product.title || product.name}</h1>
+          <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
           <p className="text-gray-600 mb-4">{product.description}</p>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div><span className="font-medium">Price:</span> KSh {product.price?.toLocaleString()}</div>
