@@ -228,7 +228,7 @@ export default function ShopContent() {
             <>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
                 {products.map((product) => {
-                  const discount = getDiscount(product.price, product.original_price)
+                  const discount = getDiscount(product.price, product.original_price ?? null)
                   const inWishlist = isInWishlist(product.id)
                   const inStock = (product.stock ?? 1) > 0
                   const lowStock = inStock && (product.stock ?? 99) <= 5
