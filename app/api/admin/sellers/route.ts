@@ -96,8 +96,8 @@ export async function PATCH(request: Request) {
         .eq('id', seller_id)
     }
 
-    // If rejected/suspended, downgrade profile role back to 'buyer'
-    if (status === 'rejected' || status === 'suspended') {
+    // If suspended, downgrade profile role back to 'buyer'
+    if (status === 'suspended') {
       await supabase
         .from('profiles')
         .update({ role: 'buyer' })
