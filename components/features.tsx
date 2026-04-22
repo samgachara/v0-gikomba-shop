@@ -16,7 +16,7 @@ const features = [
   {
     icon: CreditCard,
     title: "M-Pesa Payments",
-    description: "Pay easily with M-Pesa, Airtel Money, or card. Buy Now, Pay Later available.",
+    description: "Pay easily with M-Pesa, Airtel Money, or card. Fast and secure checkout every time.",
   },
   {
     icon: Headphones,
