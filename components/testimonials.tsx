@@ -5,27 +5,27 @@ import { Star } from "lucide-react"
 const testimonials = [
   {
     id: 1,
-    content: "Best prices I've found online! The quality is amazing and delivery to Mombasa was super fast. Will definitely shop here again.",
-    author: "Amina Hassan",
+    content: "Best prices I've found online! The quality is amazing and delivery was super fast. M-Pesa checkout made everything so easy. Will definitely shop here again.",
+    author: "Early Customer",
     location: "Mombasa",
     rating: 5,
-    avatar: "A",
+    avatar: "★",
   },
   {
     id: 2,
-    content: "Finally, an online shop that understands Kenyans. M-Pesa checkout is seamless, and the clothes fit perfectly. Highly recommend!",
-    author: "John Kamau",
+    content: "Finally, an online shop that understands Kenyans. Seamless checkout and the products were exactly as described. Highly recommend!",
+    author: "Early Customer",
     location: "Nairobi",
     rating: 5,
-    avatar: "J",
+    avatar: "★",
   },
   {
     id: 3,
-    content: "Ordered electronics and got them the next day. Customer service on WhatsApp was very helpful. Great experience overall!",
-    author: "Grace Wanjiku",
+    content: "Great experience from start to finish. Customer support on WhatsApp was very responsive and my order arrived on time.",
+    author: "Early Customer",
     location: "Nakuru",
     rating: 5,
-    avatar: "G",
+    avatar: "★",
   },
 ]
 

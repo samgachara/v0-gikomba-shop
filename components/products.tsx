@@ -22,13 +22,6 @@ function formatPrice(price: number): string {
   return `KSh ${price.toLocaleString()}`
 }
 
-// Stable fake review count from product id — no Math.random() (causes hydration crash)
-function stableReviewCount(id: string): number {
-  let hash = 0
-  for (const c of id) hash = (hash * 31 + c.charCodeAt(0)) & 0xffff
-  return (hash % 290) + 10
-}
-
 export function Products() {
   const [wishlist, setWishlist] = useState<string[]>([])
   const [products, setProducts] = useState<SellerProduct[]>([])
@@ -160,12 +153,6 @@ export function Products() {
                   <h3 className="text-sm font-medium text-foreground line-clamp-1">
                     {product.name}
                   </h3>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                    <span className="text-xs text-muted-foreground">
-                      4.5 ({stableReviewCount(product.id)})
-                    </span>
-                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-base font-semibold text-foreground">
                       {formatPrice(product.price)}

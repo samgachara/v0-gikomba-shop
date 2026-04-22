@@ -36,7 +36,7 @@ export default function AboutPage() {
               </div>
               <div className="bg-muted rounded-2xl p-8">
                 <div className="grid grid-cols-2 gap-6 text-center">
-                  {[['10,000+','Products Listed'],['5,000+','Happy Buyers'],['500+','Active Sellers'],['47','Counties Served']].map(([n,l]) => (
+                  {[['47','Counties Served'],['M-Pesa','Secure Payments'],['24–48h','Delivery Time'],['2025','Founded']].map(([n,l]) => (
                     <div key={l}>
                       <p className="text-3xl font-bold text-primary">{n}</p>
                       <p className="text-sm text-muted-foreground mt-1">{l}</p>
@@ -57,6 +57,27 @@ export default function AboutPage() {
                   </div>
                   <h3 className="font-semibold mb-2">{title}</h3>
                   <p className="text-sm text-muted-foreground">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 px-4 bg-muted/30">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-3">Meet the Founders</h2>
+            <p className="text-muted-foreground mb-12">The people behind gikomba.shop</p>
+            <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+              {[
+                { name: 'Samwel Gachara', role: 'Co-Founder & CEO', initial: 'S' },
+                { name: 'Isaac Mwathi',   role: 'Co-Founder & CTO', initial: 'I' },
+              ].map(({ name, role, initial }) => (
+                <div key={name} className="flex flex-col items-center p-8 rounded-2xl bg-card border border-border">
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <span className="text-3xl font-bold text-primary">{initial}</span>
+                  </div>
+                  <h3 className="text-xl font-semibold">{name}</h3>
+                  <p className="text-muted-foreground text-sm mt-1">{role}</p>
                 </div>
               ))}
             </div>

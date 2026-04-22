@@ -5,38 +5,32 @@ const categories = [
   {
     name: "Women's Fashion",
     href: "/shop?category=women",
-    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=533&fit=crop",
-    count: "2,500+ Products",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=533&fit=crop"
   },
   {
     name: "Men's Fashion",
     href: "/shop?category=men",
-    image: "https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=400&h=533&fit=crop",
-    count: "1,800+ Products",
+    image: "https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=400&h=533&fit=crop"
   },
   {
     name: "Electronics",
     href: "/shop?category=electronics",
-    image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=533&fit=crop",
-    count: "1,200+ Products",
+    image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=533&fit=crop"
   },
   {
     name: "Home & Living",
     href: "/shop?category=home",
-    image: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=400&h=533&fit=crop",
-    count: "950+ Products",
+    image: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=400&h=533&fit=crop"
   },
   {
     name: "Kids & Baby",
     href: "/shop?category=kids",
-    image: "https://images.unsplash.com/photo-1519704943920-18447022ad75?w=400&h=533&fit=crop",
-    count: "600+ Products",
+    image: "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=400&h=533&fit=crop"
   },
   {
     name: "Accessories",
     href: "/shop?category=accessories",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=533&fit=crop",
-    count: "1,100+ Products",
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=533&fit=crop"
   },
 ]
 
@@ -78,8 +72,7 @@ export function Categories() {
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-4">
                 <h3 className="text-sm font-semibold text-card sm:text-base">{category.name}</h3>
-                <p className="text-xs text-card/80">{category.count}</p>
-              </div>
+                              </div>
             </Link>
           ))}
         </div>
