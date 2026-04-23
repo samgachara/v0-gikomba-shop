@@ -40,7 +40,7 @@ export default function CheckoutPage() {
     shipping_address: '',
     shipping_city: '',
     phone: '',
-    payment_method: 'mpesa' as 'mpesa' | 'card',
+    payment_method: 'mpesa' as 'mpesa' | 'card' | 'pod',
   })
   const [orderId, setOrderId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -283,13 +283,14 @@ export default function CheckoutPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Payment Method *</Label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       {[
-                        { id: 'mpesa', label: 'M-Pesa', icon: '📱', note: 'Recommended' },
-                        { id: 'card',  label: 'Card',   icon: '💳', note: '' },
+                        { id: 'mpesa', label: 'M-Pesa',     icon: '📱', note: 'Recommended' },
+                        { id: 'card',  label: 'Card',       icon: '💳', note: '' },
+                        { id: 'pod',   label: 'Pay on Delivery', icon: '🚚', note: 'Nairobi only' },
                       ].map(({ id, label, icon, note }) => (
                         <button key={id} type="button"
-                          onClick={() => setForm(f => ({ ...f, payment_method: id as 'mpesa' | 'card' }))}
+                          onClick={() => setForm(f => ({ ...f, payment_method: id as 'mpesa' | 'card' | 'pod' }))}
                           className={`flex items-center gap-2 p-4 rounded-lg border-2 text-sm font-medium transition-colors ${
                             form.payment_method === id ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'
                           }`}>

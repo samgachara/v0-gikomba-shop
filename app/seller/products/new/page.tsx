@@ -22,6 +22,7 @@ export default function NewProduct() {
     original_price: 0,
     image_url: '',
     category: '',
+    quality_grade: '',
     stock: 0,
     is_featured: false,
     is_new: true,
@@ -129,6 +130,16 @@ export default function NewProduct() {
                 <option value="home">Home & Living</option>
                 <option value="kids">Kids</option>
                 <option value="accessories">Accessories</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Quality Grade <span className="text-muted-foreground font-normal text-xs">optional</span></label>
+              <select name="quality_grade" value={formData.quality_grade} onChange={handleChange} className="w-full p-2 border rounded-lg">
+                <option value="">Not specified</option>
+                <option value="A">Grade A — Like new / mint condition</option>
+                <option value="B">Grade B — Good condition, minor wear</option>
+                <option value="C">Grade C — Fair, visible wear but functional</option>
               </select>
             </div>
           </div>

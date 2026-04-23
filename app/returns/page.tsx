@@ -54,6 +54,19 @@ export default function ReturnsPage() {
             </ol>
           </div>
         </div>
+
+        <div className="max-w-4xl mx-auto mt-12 p-6 bg-primary/5 border border-primary/20 rounded-2xl">
+          <div className="flex items-start gap-4">
+            <span className="text-3xl flex-shrink-0">🛡️</span>
+            <div>
+              <h3 className="font-semibold text-lg mb-1">Buyer Protection Guarantee</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Every order on gikomba.shop is covered by our Buyer Protection policy. If your item doesn&apos;t arrive, arrives damaged, or is significantly different from the description — we will issue a full refund via M-Pesa. No questions asked within 7 days of delivery.
+              </p>
+              <p className="text-sm font-medium text-primary mt-2">Contact us on WhatsApp: +254 736 906 440</p>
+            </div>
+          </div>
+        </div>
       </main>
       <Footer />
     </>

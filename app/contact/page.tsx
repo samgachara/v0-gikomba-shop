@@ -77,7 +77,7 @@ export default function ContactPage() {
                 {
                   icon: MapPin,
                   title: 'Address',
-                  lines: ['Nairobi, Kenya', 'Gikomba Market Area'],
+                  lines: ['Nairobi, Kenya', 'Business Registration: In Progress'],
                   href: undefined
                 },
               ].map(({ icon: Icon, title, lines, href }) => (

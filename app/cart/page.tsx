@@ -191,10 +191,24 @@ export default function CartPage() {
                     <span>{formatPrice(cartTotal)}</span>
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex flex-col gap-3">
                   <Button className="w-full" size="lg" onClick={handleCheckout}>
                     Proceed to Checkout
                   </Button>
+                  <div className="w-full grid grid-cols-3 gap-2 text-center">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-sm">🔒</span>
+                      <span className="text-xs text-muted-foreground">Secure Pay</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-sm">✅</span>
+                      <span className="text-xs text-muted-foreground">Buyer Protection</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-sm">↩️</span>
+                      <span className="text-xs text-muted-foreground">7-Day Returns</span>
+                    </div>
+                  </div>
                 </CardFooter>
               </Card>
             </div>

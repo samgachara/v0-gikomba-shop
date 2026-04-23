@@ -43,9 +43,13 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-4 text-sm text-background/70 leading-relaxed">
-              Kenya&apos;s favorite online marketplace. Quality products at unbeatable prices, 
-              delivered to your doorstep.
+              Kenya&apos;s trusted online marketplace. Verified sellers, M-Pesa payments, and buyer protection on every order.
             </p>
+            <div className="mt-4 space-y-1">
+              <p className="text-xs text-background/50">📍 Nairobi, Kenya</p>
+              <p className="text-xs text-background/50">📞 +254 736 906 440</p>
+              <p className="text-xs text-background/50">✉️ hello@gikomba.shop</p>
+            </div>
             <div className="mt-6 flex gap-4">
               <a href="https://www.facebook.com/gikombashop" target="_blank" rel="noopener noreferrer" className="text-background/70 hover:text-background transition-colors"> {/* Updated */}
                 <span className="sr-only">Facebook</span>
@@ -132,7 +136,7 @@ export function Footer() {
         <div className="mt-12 border-t border-background/10 pt-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <p className="text-sm text-background/60">
-              © 2026 gikomba.shop. All rights reserved.
+              © 2025–2026 gikomba.shop · Nairobi, Kenya · Buyer Protection on Every Order
             </p>
             <div className="flex items-center gap-3">
               <span className="text-xs text-background/60">We accept:</span>

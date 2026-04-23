@@ -69,12 +69,12 @@ export function Hero() {
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </Link>
-                  {/* Clickable "50% OFF TODAY" banner → sale page */}
-                  <Link href="/shop?filter=sale" className="block aspect-square rounded-2xl bg-primary flex items-center justify-center p-6 hover:bg-primary/90 transition-colors">
+
+                  <Link href="/seller/register" className="block aspect-square rounded-2xl bg-primary flex items-center justify-center p-6 hover:bg-primary/90 transition-colors">
                     <div className="text-center text-primary-foreground">
-                      <p className="text-4xl font-bold">50%</p>
-                      <p className="text-sm font-medium">OFF TODAY</p>
-                      <p className="text-xs mt-1 underline">Shop Sale →</p>
+                      <p className="text-2xl font-bold">Sell on</p>
+                      <p className="text-3xl font-bold mt-1">Gikomba</p>
+                      <p className="text-xs mt-2 underline">Start free →</p>
                     </div>
                   </Link>
                 </div>

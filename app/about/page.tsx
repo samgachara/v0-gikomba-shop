@@ -63,6 +63,28 @@ export default function AboutPage() {
           </div>
         </section>
 
+        <section className="py-16 px-4 border-t border-border">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-3">Our Product Quality System</h2>
+              <p className="text-muted-foreground">Every product on gikomba.shop is graded by the seller so you always know what you&apos;re buying</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                { grade: 'A', label: 'Grade A — Like New', color: 'border-green-200 bg-green-50', badge: 'text-green-700', desc: 'Mint condition. No visible wear. May be brand new or barely used.' },
+                { grade: 'B', label: 'Grade B — Good Condition', color: 'border-blue-200 bg-blue-50', badge: 'text-blue-700', desc: 'Light use. Minor wear that does not affect quality or function.' },
+                { grade: 'C', label: 'Grade C — Fair Condition', color: 'border-yellow-200 bg-yellow-50', badge: 'text-yellow-700', desc: 'Visible signs of use. Fully functional. Great value for budget buyers.' },
+              ].map(({ grade, label, color, badge, desc }) => (
+                <div key={grade} className={`p-6 rounded-xl border-2 ${color}`}>
+                  <div className={`text-3xl font-bold mb-2 ${badge}`}>Grade {grade}</div>
+                  <p className="font-semibold mb-2">{label}</p>
+                  <p className="text-sm text-muted-foreground">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="py-16 px-4 bg-muted/30">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-3">Meet the Founders</h2>

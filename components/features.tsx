@@ -11,7 +11,7 @@ const features = [
   {
     icon: Shield,
     title: "Quality Guaranteed",
-    description: "Every item is inspected. Easy returns within 7 days if not satisfied.",
+    description: "Shop from verified sellers. Easy 7-day returns if you're not satisfied.",
   },
   {
     icon: CreditCard,
@@ -20,8 +20,8 @@ const features = [
   },
   {
     icon: Headphones,
-    title: "24/7 Support",
-    description: "Chat with us on WhatsApp anytime. We respond within minutes.",
+    title: "Fast Support",
+    description: "Chat with us on WhatsApp Mon–Sat 8am–8pm. We reply within the hour.",
   },
 ]
 

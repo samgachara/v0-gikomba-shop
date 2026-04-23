@@ -22,6 +22,7 @@ interface Review {
   rating: number
   comment: string
   created_at: string
+  is_verified_purchase?: boolean
   profiles?: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
 }
 
@@ -62,7 +63,7 @@ export default function ProductDetailPage() {
       supabase.from('products').select('*').eq('id', id).single(),
       supabase
         .from('product_reviews')
-        .select('id, rating, comment, created_at, profiles(first_name, last_name)')
+        .select('id, rating, comment, created_at, is_verified_purchase, profiles(first_name, last_name)')
         .eq('product_id', id)
         .order('created_at', { ascending: false }),
     ])
@@ -235,6 +236,15 @@ export default function ProductDetailPage() {
                   <span className="text-sm text-muted-foreground">No reviews yet</span>
                 )}
                 <Badge variant="outline" className="capitalize">{product.category}</Badge>
+                {product.quality_grade && (
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${{
+                    'A': 'bg-green-50 text-green-700 border-green-200',
+                    'B': 'bg-blue-50 text-blue-700 border-blue-200',
+                    'C': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+                  }[product.quality_grade as string] ?? ''}`}>
+                    Grade {product.quality_grade}
+                  </span>
+                )}
               </div>
 
               {/* Price */}
@@ -393,7 +403,12 @@ export default function ProductDetailPage() {
                             {name.charAt(0).toUpperCase()}
                           </div>
                           <div>
+                            <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-medium text-sm">{name}</p>
+                            {review.is_verified_purchase && (
+                              <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full font-medium">✓ Verified Purchase</span>
+                            )}
+                          </div>
                             <p className="text-xs text-muted-foreground">
                               {new Date(review.created_at).toLocaleDateString('en-KE', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </p>
