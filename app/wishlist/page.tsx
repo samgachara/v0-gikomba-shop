@@ -19,11 +19,31 @@ export default function WishlistPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/auth/login')
-    }
-  }, [user, authLoading, router])
+  // Don't redirect — show a friendly sign-in prompt instead
+  // This avoids the jarring redirect the audit flagged
+
+  // Show friendly sign-in prompt for guests
+  if (!authLoading && !user) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-background flex items-center justify-center px-4">
+          <div className="text-center max-w-sm">
+            <div className="text-5xl mb-4">❤️</div>
+            <h2 className="text-2xl font-bold mb-2">Your Wishlist</h2>
+            <p className="text-muted-foreground mb-6">Sign in to save your favourite items and access your wishlist from any device.</p>
+            <Link href="/auth/login" className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 mr-3">
+              Sign In
+            </Link>
+            <Link href="/auth/sign-up" className="inline-flex items-center justify-center rounded-md border border-border px-6 py-2.5 text-sm font-medium hover:bg-muted">
+              Create Account
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
 
   if (authLoading || wishlistLoading) {
     return (

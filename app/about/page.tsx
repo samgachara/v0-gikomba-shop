@@ -2,7 +2,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ShoppingBag, Users, Shield, Truck } from 'lucide-react'
 
-export const metadata = { title: 'About Us - gikomba.shop' }
+export const metadata = { title: 'About Us – gikomba.shop', description: 'gikomba.shop is Kenya\'s trusted online marketplace, built by Samwel Gachara and Isaac Mwathi to bring the spirit of Gikomba Market online with verified sellers and buyer protection.' }
 
 export default function AboutPage() {
   return (

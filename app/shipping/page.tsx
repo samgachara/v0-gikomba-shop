@@ -2,7 +2,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Truck, Clock, MapPin, Package } from 'lucide-react'
 
-export const metadata = { title: 'Shipping Info - gikomba.shop' }
+export const metadata = { title: 'Shipping & Delivery – gikomba.shop', description: 'Fast delivery across all 47 counties in Kenya. Standard 2–5 days KSh 200, Express same-day in Nairobi. Free shipping on orders over KSh 5,000.' }
 
 export default function ShippingPage() {
   return (

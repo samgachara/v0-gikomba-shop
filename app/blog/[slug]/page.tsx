@@ -2,153 +2,124 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 
-const posts: Record<string, {
-  title: string; date: string; category: string; content: string
-}> = {
+const posts: Record<string, { title: string; date: string; category: string; content: string }> = {
   'tips-for-selling-on-gikomba': {
     title: '5 Tips for Selling Successfully on gikomba.shop',
     date: 'March 15, 2026',
     category: 'Seller Tips',
-    content: `Starting your selling journey on gikomba.shop is exciting — here's how to hit the ground running.
+    content: `
+## 1. Write a Clear, Honest Product Title
+Your title should include the product name, key feature, and condition. Example: "Men's Nike Air Max — Size 42 — Grade B" beats "Nice shoes for sale".
 
-**1. Write clear, honest product titles**
-Use the product name, key feature and condition. e.g. "Men's Leather Belt – Black – New" is better than just "Belt".
+## 2. Use Real Photos
+Buyers decide with their eyes first. Take photos in good natural light. Show any wear or defects — this builds trust and reduces returns.
 
-**2. Take quality photos**
-Good lighting matters more than camera quality. Natural light near a window works perfectly. Show the product from multiple angles.
+## 3. Price Competitively
+Check what similar items sell for on other Kenyan platforms. Slightly undercut if you're new — your first 5 reviews matter more than your first profit margin.
 
-**3. Price competitively**
-Browse similar products on the platform before pricing. A competitive price with a good photo will always outsell an expensive listing with a poor photo.
+## 4. Set Your Quality Grade
+gikomba.shop lets you grade products A, B, or C. Use it honestly. Buyers who know what to expect are satisfied buyers who leave good reviews.
 
-**4. Respond to inquiries quickly**
-Buyers who get a fast response are much more likely to complete a purchase. Enable WhatsApp notifications so you never miss a message.
-
-**5. Be accurate about stock**
-Keep your inventory updated. Running out of stock damages your seller rating and disappoints buyers. Update listings as soon as items sell.`,
+## 5. Respond to Buyers Fast
+Sellers who respond to WhatsApp enquiries within the hour close 3x more sales than those who respond same-day. Turn on notifications.
+    `,
   },
   'mpesa-vs-card-payments': {
     title: 'M-Pesa vs Card Payments: Which is Better for Online Shopping?',
     date: 'March 8, 2026',
     category: 'Payment',
-    content: `Both M-Pesa and card payments are accepted on gikomba.shop, but they work differently. Here's what to know.
+    content: `
+## M-Pesa: The Kenyan Default
 
-**M-Pesa**
-M-Pesa is the most popular payment method on gikomba.shop — and for good reason. It's instant, secure, and doesn't require a bank account. You simply enter your M-Pesa number at checkout and confirm the payment prompt on your phone. No card details to worry about, no risk of fraud.
+M-Pesa is the most popular payment method on gikomba.shop — and for good reason. It's instant, familiar, and doesn't require a bank account. The STK push means you just enter your PIN and the payment is done.
 
-Best for: Most Kenyan buyers. Fastest checkout experience.
+**Pros:** Instant, widely trusted, no card needed, works on any phone.  
+**Cons:** Requires good network, transaction limits apply.
 
-**Card Payments (Visa/Mastercard)**
-Card payments work through our secure payment gateway. They're ideal if you're shopping from outside Kenya or prefer to keep your M-Pesa balance for other uses. International buyers will find card payments the most familiar option.
+## Card Payments: For the Banked
 
-Best for: International buyers or those without M-Pesa.
+Visa and Mastercard work well for larger purchases or for buyers who prefer keeping purchases off their M-Pesa statement.
 
-**Our recommendation**
-For Kenyan buyers, M-Pesa is the fastest and most convenient option. For international purchases, use a card.`,
+**Pros:** Higher limits, works internationally, full purchase history.  
+**Cons:** Requires a bank account, slightly more steps.
+
+## Pay on Delivery: For First-Time Buyers
+
+New to gikomba.shop? Pay on Delivery (Nairobi only) lets you inspect the item before paying. Best for higher-value purchases.
+
+**Our recommendation:** Use M-Pesa for quick purchases under KSh 5,000. Use card for larger orders. Use Pay on Delivery for your very first order if you want peace of mind.
+    `,
   },
   'gikomba-market-story': {
     title: 'How Gikomba Market Inspired Us to Build This Platform',
     date: 'February 20, 2026',
     category: 'Company',
-    content: `Gikomba Market in Nairobi is one of the most vibrant commercial spaces in East Africa. Every day, thousands of vendors and buyers meet there to trade everything from second-hand clothes to electronics, household goods, and food.
+    content: `
+## The Market That Never Sleeps
 
-What has always made Gikomba special is its energy — the hustle, the deals, the community. Buyers and sellers know each other. Trust is built face to face. Prices are negotiated. It's commerce in its most human form.
+Gikomba in Nairobi is not just a market — it's an institution. Every day, thousands of traders and buyers crowd its lanes, hunting for quality second-hand clothes, electronics, and household goods at honest prices.
 
-We built gikomba.shop to bring that same energy online. Not to replace the physical market, but to extend it. To let a seller in Gikomba reach a buyer in Mombasa, Kisumu or Eldoret without either of them leaving home.
+We grew up going to Gikomba. We saw the energy, the hustle, and the value. We also saw the friction: no receipts, no returns, no way to know if the seller you bought from today would be there tomorrow.
 
-Our goal is simple: make it as easy to buy and sell online in Kenya as it is at Gikomba market — with the security of digital payments and the speed of doorstep delivery.
+## The Problem We Wanted to Solve
 
-We're just getting started. Join us.`,
-  },
-    'buyer-protection-guide': {
-    title: 'How Buyer Protection Works on gikomba.shop',
-    date: 'April 5, 2026',
-    category: 'Trust & Safety',
-    content: `Shopping online requires trust — and we take that seriously. Here is exactly how we protect every buyer on gikomba.shop.
+Kenya's informal trade is massive — but informal means unpredictable for buyers. You could find a grade-A leather jacket for KSh 300, or you could get home and find it falls apart in the wash.
 
-**What is Buyer Protection?**
-Every order placed on gikomba.shop is covered by our Buyer Protection guarantee. This means that if something goes wrong, we will make it right — no lengthy disputes or waiting weeks for a resolution.
+We asked: what if Gikomba had trust infrastructure?
 
-**When does Buyer Protection apply?**
-You are covered if: your item does not arrive within the expected delivery window; the item arrives damaged or broken; the item is significantly different from the product description or photos; you receive the wrong item entirely.
+## Building gikomba.shop
 
-**How to claim**
-Contact us within 7 days of delivery via WhatsApp on +254 736 906 440 or email support@gikomba.shop. Share your order number and a photo if relevant. We process refunds via M-Pesa within 48 hours of approving a claim.
+In 2025, Samwel Gachara and Isaac Mwathi started building. The goal was simple: take the spirit of Gikomba — great value, local sellers, real products — and add the trust layer that the physical market lacks.
 
-**Your M-Pesa is safe**
-Payments go through Safaricom's secure platform — we never store your M-Pesa PIN or personal banking details.`,
-  },
-  'product-grading-explained': {
-    title: 'What Grade A, B and C Actually Means When You Shop Here',
-    date: 'April 10, 2026',
-    category: 'Buyer Guide',
-    content: `One of the things that makes gikomba.shop different is our product quality grading system. Every seller on our platform is encouraged to grade their products honestly, so you always know what you are getting.
+Verified sellers. Quality grades. M-Pesa payments. Buyer protection. Real reviews from real buyers.
 
-**Grade A — Like New / Mint Condition**
-Grade A products are in mint condition. They may be brand new, unused, or barely used with no visible wear. Think of a phone that was bought and used for a week, or clothes that were worn once. Grade A items are the closest you will get to buying new.
-
-**Grade B — Good Condition**
-Grade B products have been used but are in good condition. There may be minor signs of wear — a small scuff on a shoe, a faint crease on a shirt — but nothing that affects the product's function or appearance significantly. Most second-hand items sold in good faith fall here.
-
-**Grade C — Fair Condition**
-Grade C products show visible signs of use. They are fully functional but you will notice the wear. Grade C is ideal for budget buyers who prioritise price over aesthetics, or for items where condition matters less — like phone chargers, bags, or tools.
-
-**Why this matters**
-Without a grading system, "second-hand" means nothing. With grades, you can decide exactly what level of quality you are happy to pay for — and sellers who are honest about condition build better reputations.`,
-  },
-  'how-to-shop-safely-online-kenya': {
-    title: 'How to Shop Safely Online in Kenya in 2026',
-    date: 'April 18, 2026',
-    category: 'Buyer Guide',
-    content: `Online shopping in Kenya has grown rapidly — but so have scams. Here is how to protect yourself wherever you shop, including on gikomba.shop.
-
-**1. Always use a platform, never pay direct**
-The number one mistake Kenyan online shoppers make is paying directly to a seller's personal M-Pesa number before receiving goods. Always use a marketplace that holds or secures payment until delivery is confirmed.
-
-**2. Check for verified sellers**
-On gikomba.shop, look for the blue Verified badge on seller profiles. Verified sellers have been reviewed by our team. Buying from verified sellers reduces your risk significantly.
-
-**3. Read product descriptions carefully**
-A good seller describes condition, dimensions, and any defects honestly. If a listing has almost no description and only one blurry photo — be cautious.
-
-**4. Use M-Pesa, not direct bank transfer**
-M-Pesa transactions are traceable and Safaricom has a dispute process. Bank transfers to unknown individuals are much harder to reverse.
-
-**5. Trust your instincts**
-If a deal seems too good to be true, it probably is. A brand-new iPhone for KSh 5,000 is not a deal — it is a scam.
-
-**6. Know your return rights**
-Legitimate Kenyan online shops offer returns. On gikomba.shop, you have 7 days. Always read the returns policy before buying expensive items.`,
+That's gikomba.shop. We're still early. But we're building something real.
+    `,
   },
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const post = posts[slug]
-  if (!post) return { title: 'Blog | Gikomba Shop' }
-  return { title: post.title }
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const post = posts[params.slug]
+  if (!post) return { title: 'Post Not Found' }
+  return {
+    title: `${post.title} | gikomba.shop Blog`,
+    description: post.content.slice(0, 150).replace(/[#*]/g, '').trim(),
+  }
 }
 
-export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const post = posts[slug]
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
+  const post = posts[params.slug]
   if (!post) notFound()
+
+  // Simple markdown-like rendering
+  const paragraphs = post.content.trim().split('\n\n')
 
   return (
     <>
       <Header />
       <main className="min-h-screen bg-background py-16 px-4">
-        <div className="max-w-2xl mx-auto">
-          <Link href="/blog" className="text-sm text-primary hover:underline mb-8 inline-block">← Back to Blog</Link>
-          <div className="flex items-center gap-3 mb-4">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/blog" className="text-sm text-primary hover:underline mb-8 inline-block">
+            ← Back to Blog
+          </Link>
+          <div className="mb-6">
             <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{post.category}</span>
-            <span className="text-xs text-muted-foreground">{post.date}</span>
+            <span className="text-xs text-muted-foreground ml-3">{post.date}</span>
           </div>
-          <h1 className="text-3xl font-bold mb-8">{post.title}</h1>
-          <div className="prose prose-neutral max-w-none">
-            {post.content.split('\n\n').map((para, i) => (
-              <p key={i} className="mb-4 text-muted-foreground leading-relaxed whitespace-pre-line">{para}</p>
-            ))}
+          <h1 className="text-4xl font-bold mb-8 leading-tight">{post.title}</h1>
+          <div className="prose prose-gray max-w-none space-y-4">
+            {paragraphs.map((p, i) => {
+              if (p.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold mt-8 mb-3">{p.replace('## ', '')}</h2>
+              if (p.startsWith('**')) return <p key={i} className="text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: p.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+              return <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>
+            })}
+          </div>
+          <div className="mt-12 pt-8 border-t border-border text-center">
+            <p className="text-muted-foreground mb-4">Ready to start shopping or selling?</p>
+            <Link href="/shop" className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 mr-3">Shop Now</Link>
+            <Link href="/auth/sign-up?role=seller" className="inline-flex items-center justify-center rounded-md border border-border px-6 py-2 text-sm font-medium hover:bg-muted">Become a Seller</Link>
           </div>
         </div>
       </main>

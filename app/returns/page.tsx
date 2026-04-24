@@ -2,7 +2,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react'
 
-export const metadata = { title: 'Returns & Refunds - gikomba.shop' }
+export const metadata = { title: 'Returns & Refunds – gikomba.shop', description: '7-day hassle-free returns on all gikomba.shop orders. Full refund via M-Pesa if your item doesn\'t match the description.' }
 
 export default function ReturnsPage() {
   return (

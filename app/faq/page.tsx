@@ -1,7 +1,7 @@
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 
-export const metadata = { title: 'FAQs - gikomba.shop' }
+export const metadata = { title: 'FAQs – gikomba.shop', description: 'Answers to common questions about ordering, payments, delivery, returns, and selling on gikomba.shop — Kenya\'s trusted online marketplace.' }
 
 const faqs = [
   { q: 'How do I place an order?', a: 'Browse our shop, add items to your cart, and proceed to checkout. You can pay via M-Pesa or card.' },

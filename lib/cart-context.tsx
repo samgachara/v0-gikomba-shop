@@ -264,6 +264,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // ── Wishlist (auth-only, unchanged) ────────────────────────────────────
   const addToWishlist = useCallback(
     async (productId: string) => {
+      // Show friendly toast instead of hard redirect when not logged in
+      if (!user) {
+        toast.error('Sign in to save items to your wishlist', {
+          action: { label: 'Sign In', onClick: () => { if (typeof window !== 'undefined') window.location.href = '/auth/login' } },
+          duration: 4000,
+        })
+        return
+      }
       const res = await fetch('/api/wishlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -271,10 +279,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       })
       const json = await res.json()
       if (!res.ok) { toast.error(json.error ?? 'Failed to add to wishlist'); return }
-      toast.success('Added to wishlist')
+      toast.success('Added to wishlist ❤️')
       mutateWishlist()
     },
-    [mutateWishlist],
+    [user, mutateWishlist],
   )
 
   const removeFromWishlist = useCallback(
