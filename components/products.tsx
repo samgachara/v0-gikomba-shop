@@ -97,7 +97,7 @@ export function Products() {
               Be the first to list products on gikomba.shop
             </p>
             <Button asChild>
-              <Link href="/auth/sign-up">Become a Seller</Link>
+              <Link href="/auth/sign-up?role=seller">Become a Seller</Link>
             </Button>
           </div>
         )}

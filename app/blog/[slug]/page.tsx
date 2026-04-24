@@ -60,6 +60,66 @@ Our goal is simple: make it as easy to buy and sell online in Kenya as it is at 
 
 We're just getting started. Join us.`,
   },
+    'buyer-protection-guide': {
+    title: 'How Buyer Protection Works on gikomba.shop',
+    date: 'April 5, 2026',
+    category: 'Trust & Safety',
+    content: `Shopping online requires trust — and we take that seriously. Here is exactly how we protect every buyer on gikomba.shop.
+
+**What is Buyer Protection?**
+Every order placed on gikomba.shop is covered by our Buyer Protection guarantee. This means that if something goes wrong, we will make it right — no lengthy disputes or waiting weeks for a resolution.
+
+**When does Buyer Protection apply?**
+You are covered if: your item does not arrive within the expected delivery window; the item arrives damaged or broken; the item is significantly different from the product description or photos; you receive the wrong item entirely.
+
+**How to claim**
+Contact us within 7 days of delivery via WhatsApp on +254 736 906 440 or email support@gikomba.shop. Share your order number and a photo if relevant. We process refunds via M-Pesa within 48 hours of approving a claim.
+
+**Your M-Pesa is safe**
+Payments go through Safaricom's secure platform — we never store your M-Pesa PIN or personal banking details.`,
+  },
+  'product-grading-explained': {
+    title: 'What Grade A, B and C Actually Means When You Shop Here',
+    date: 'April 10, 2026',
+    category: 'Buyer Guide',
+    content: `One of the things that makes gikomba.shop different is our product quality grading system. Every seller on our platform is encouraged to grade their products honestly, so you always know what you are getting.
+
+**Grade A — Like New / Mint Condition**
+Grade A products are in mint condition. They may be brand new, unused, or barely used with no visible wear. Think of a phone that was bought and used for a week, or clothes that were worn once. Grade A items are the closest you will get to buying new.
+
+**Grade B — Good Condition**
+Grade B products have been used but are in good condition. There may be minor signs of wear — a small scuff on a shoe, a faint crease on a shirt — but nothing that affects the product's function or appearance significantly. Most second-hand items sold in good faith fall here.
+
+**Grade C — Fair Condition**
+Grade C products show visible signs of use. They are fully functional but you will notice the wear. Grade C is ideal for budget buyers who prioritise price over aesthetics, or for items where condition matters less — like phone chargers, bags, or tools.
+
+**Why this matters**
+Without a grading system, "second-hand" means nothing. With grades, you can decide exactly what level of quality you are happy to pay for — and sellers who are honest about condition build better reputations.`,
+  },
+  'how-to-shop-safely-online-kenya': {
+    title: 'How to Shop Safely Online in Kenya in 2026',
+    date: 'April 18, 2026',
+    category: 'Buyer Guide',
+    content: `Online shopping in Kenya has grown rapidly — but so have scams. Here is how to protect yourself wherever you shop, including on gikomba.shop.
+
+**1. Always use a platform, never pay direct**
+The number one mistake Kenyan online shoppers make is paying directly to a seller's personal M-Pesa number before receiving goods. Always use a marketplace that holds or secures payment until delivery is confirmed.
+
+**2. Check for verified sellers**
+On gikomba.shop, look for the blue Verified badge on seller profiles. Verified sellers have been reviewed by our team. Buying from verified sellers reduces your risk significantly.
+
+**3. Read product descriptions carefully**
+A good seller describes condition, dimensions, and any defects honestly. If a listing has almost no description and only one blurry photo — be cautious.
+
+**4. Use M-Pesa, not direct bank transfer**
+M-Pesa transactions are traceable and Safaricom has a dispute process. Bank transfers to unknown individuals are much harder to reverse.
+
+**5. Trust your instincts**
+If a deal seems too good to be true, it probably is. A brand-new iPhone for KSh 5,000 is not a deal — it is a scam.
+
+**6. Know your return rights**
+Legitimate Kenyan online shops offer returns. On gikomba.shop, you have 7 days. Always read the returns policy before buying expensive items.`,
+  },
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

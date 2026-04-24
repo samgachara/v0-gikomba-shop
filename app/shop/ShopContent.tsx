@@ -218,11 +218,31 @@ export default function ShopContent() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : products.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-muted-foreground text-lg">No products found</p>
-              <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                Clear filters
-              </Button>
+            <div className="text-center py-20 max-w-sm mx-auto">
+              <div className="text-5xl mb-4">🔍</div>
+              <p className="font-semibold text-lg mb-2">No products found</p>
+                {debouncedSearch && (
+                  <div className="text-sm text-muted-foreground mb-3 space-y-1">
+                    <p>Suggestions:</p>
+                    <ul className="list-disc list-inside text-left inline-block">
+                      <li>Check your spelling</li>
+                      <li>Try shorter or more general terms</li>
+                      <li>Browse by category instead</li>
+                    </ul>
+                  </div>
+                )}
+              <p className="text-muted-foreground text-sm mb-6">
+                Try a different search term, remove filters, or browse a category below.
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center mb-6">
+                {['Clothing','Shoes','Accessories','Electronics','Home & Living'].map(s => (
+                  <button key={s} onClick={() => handleCategoryChange(s.toLowerCase().replace(' & ','-'))}
+                    className="px-3 py-1 text-xs rounded-full border border-border hover:border-primary hover:text-primary transition-colors">
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <Button variant="outline" onClick={clearFilters}>Clear all filters</Button>
             </div>
           ) : (
             <>

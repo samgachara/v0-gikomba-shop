@@ -29,7 +29,7 @@ export function Hero() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
-                <Link href="/auth/sign-up">Become a Seller</Link>
+                <Link href="/auth/sign-up?role=seller">Become a Seller</Link>
               </Button>
             </div>
 

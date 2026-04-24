@@ -25,6 +25,27 @@ const posts = [
     category: 'Company',
     excerpt: "The story of how Kenya's most famous market became the inspiration for Kenya's newest e-commerce platform.",
   },
+  {
+    slug: 'buyer-protection-guide',
+    title: 'How Buyer Protection Works on gikomba.shop',
+    date: 'April 5, 2026',
+    category: 'Trust & Safety',
+    excerpt: 'Everything you need to know about our 7-day returns policy, verified sellers, and how we keep your money safe.',
+  },
+  {
+    slug: 'product-grading-explained',
+    title: 'What Grade A, B and C Actually Means When You Shop Here',
+    date: 'April 10, 2026',
+    category: 'Buyer Guide',
+    excerpt: 'Our quality grading system explained — so you always know exactly what condition a product is in before you buy.',
+  },
+  {
+    slug: 'how-to-shop-safely-online-kenya',
+    title: 'How to Shop Safely Online in Kenya in 2026',
+    date: 'April 18, 2026',
+    category: 'Buyer Guide',
+    excerpt: 'Red flags to watch for, how to use M-Pesa safely, and what questions to ask before buying from any online store.',
+  },
 ]
 
 export default function BlogPage() {
