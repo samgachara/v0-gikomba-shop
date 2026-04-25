@@ -3,7 +3,7 @@ import { Footer } from '@/components/footer'
 import Link from 'next/link'
 export const metadata = {
   title: 'Careers at gikomba.shop — Join Our Team',
-  description: 'Join the team building Kenya's trusted online marketplace. We're a small, passionate team working hard to empower Kenyan traders and shoppers.',
+  description: "Join the team building Kenya's trusted online marketplace. We're a small, passionate team working hard to empower Kenyan traders and shoppers.",
 }
 export default function CareersPage() {
   return (
