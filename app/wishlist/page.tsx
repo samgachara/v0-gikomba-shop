@@ -1,14 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Heart, ShoppingBag, Trash2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useCart } from "@/lib/cart-context"
 import { useAuth } from "@/lib/auth-context"
 import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 function formatPrice(price: number): string {
   return `KSh ${price.toLocaleString()}`
@@ -17,10 +16,6 @@ function formatPrice(price: number): string {
 export default function WishlistPage() {
   const { wishlist, wishlistLoading, addToCart, removeFromWishlist } = useCart()
   const { user, loading: authLoading } = useAuth()
-  const router = useRouter()
-
-  // Don't redirect — show a friendly sign-in prompt instead
-  // This avoids the jarring redirect the audit flagged
 
   // Show friendly sign-in prompt for guests
   if (!authLoading && !user) {
