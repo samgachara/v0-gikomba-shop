@@ -132,7 +132,10 @@ export default function ShopPage() {
             </div>
           ) : filteredProducts?.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-muted-foreground">No products found</p>
+              <p className="text-muted-foreground mb-6">No products found. Check back soon!</p>
+              <Link href="/">
+                <Button>Back to Homepage</Button>
+              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">

@@ -16,7 +16,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'Gikomba Shop - Affordable Fashion for Kenya',
+  title: "Kenya's Trusted Online Marketplace — Fashion, Electronics, Home & More",
   description: 'Shop affordable fashion, electronics, and home goods at gikomba.shop. Quality products at unbeatable prices, delivered across Kenya with M-Pesa.',
   generator: 'v0.app',
   icons: {

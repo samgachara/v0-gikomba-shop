@@ -32,7 +32,7 @@ export function Newsletter() {
           {submitted ? (
             <div className="flex items-center gap-2 rounded-full bg-primary-foreground/10 px-6 py-3">
               <span className="text-primary-foreground">
-                Thanks for subscribing! Check your inbox for your discount code.
+                Thanks! You&apos;re subscribed.
               </span>
             </div>
           ) : (
