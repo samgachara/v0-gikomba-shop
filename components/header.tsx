@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingBag, Search, Menu, User, Heart, LogOut, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -40,12 +41,14 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-              <span className="text-lg font-bold text-primary-foreground">G</span>
-            </div>
-            <span className="text-xl font-bold tracking-tight text-foreground">
-              gikomba<span className="text-primary">.shop</span>
-            </span>
+            <Image
+              src="/gikomba-logo.svg"
+              alt="gikomba.shop"
+              width={980}
+              height={320}
+              priority
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Desktop Nav */}
@@ -165,10 +168,13 @@ export function Header() {
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col gap-6 pt-6">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-                      <span className="text-sm font-bold text-primary-foreground">G</span>
-                    </div>
-                    <span className="text-lg font-bold">gikomba.shop</span>
+                    <Image
+                      src="/gikomba-logo.svg"
+                      alt="gikomba.shop"
+                      width={980}
+                      height={320}
+                      className="h-8 w-auto"
+                    />
                   </div>
                   <nav className="flex flex-col gap-4">
                     {navigation.map((item) => (
