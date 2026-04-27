@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="markTitle markDesc">
+  <title id="markTitle">gikomba.shop logo mark</title>
+  <desc id="markDesc">Shopping bag G mark used as the gikomba.shop logo icon.</desc>
+  <rect width="512" height="512" fill="none"/>
+  <g transform="translate(38 32)">
+    <rect x="0" y="134" width="74" height="18" rx="9" fill="#ff8400"/>
+    <rect x="0" y="192" width="114" height="18" rx="9" fill="#ff8400"/>
+    <rect x="0" y="250" width="92" height="18" rx="9" fill="#ff8400"/>
+    <rect x="18" y="308" width="52" height="18" rx="9" fill="#ff8400"/>
+    <path d="M98 86c6-10 16-16 27-16h34l-28 236H62z" fill="#ff8400"/>
+    <path d="M158 44c0-26 21-47 47-47s47 21 47 47v68h-17V44c0-17-13-30-30-30s-30 13-30 30v68h-17z" fill="#171717"/>
+    <circle cx="172" cy="116" r="16" fill="#ffffff"/>
+    <circle cx="172" cy="116" r="8" fill="#171717"/>
+    <circle cx="244" cy="116" r="16" fill="#ffffff"/>
+    <circle cx="244" cy="116" r="8" fill="#171717"/>
+    <path d="M132 88h146c48 0 92 24 118 64l14 21-40 32c-22-25-54-40-88-40-65 0-118 53-118 118s53 118 118 118h58v-34h-58c-46 0-84-38-84-84s38-84 84-84h130v113c0 46-38 84-84 84H122c-46 0-84-38-84-84V172c0-46 38-84 84-84h10z" fill="#171717"/>
+    <circle cx="214" cy="282" r="86" fill="#ffffff"/>
+    <path d="M214 238c18 0 35 8 46 22h18l24 22-24 22h-10l18 22-22 18-18-20v42h-64v-42l-18 20-22-18 18-22h-10l-24-22 24-22h18c11-14 28-22 46-22z" fill="#171717"/>
+    <path d="M302 245h114v155h-50c-18 0-35-7-48-20l-28-29h58l-23-28h-23z" fill="#171717"/>
+    <path d="M300 288h78l-27 30z" fill="#ff8400"/>
+  </g>
+</svg>
