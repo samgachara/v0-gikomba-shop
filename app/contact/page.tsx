@@ -77,7 +77,7 @@ export default function ContactPage() {
                 {
                   icon: MapPin,
                   title: 'Address',
-                  lines: ['Nairobi, Kenya', 'Business Registration: In Progress'],
+                  lines: ['Nairobi, Kenya'],
                   href: undefined
                 },
               ].map(({ icon: Icon, title, lines, href }) => (
