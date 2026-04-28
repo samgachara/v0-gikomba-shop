@@ -14,13 +14,62 @@ export async function DELETE(
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   const isAdmin = profile?.role === 'admin'
 
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select('id, seller_id')
+    .eq('id', id)
+    .single()
+
+  if (productError) return NextResponse.json({ error: productError.message }, { status: 500 })
+  if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+  if (!isAdmin && product.seller_id !== user.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const { count: orderItemCount, error: orderItemError } = await supabase
+    .from('order_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('product_id', id)
+  if (orderItemError) return NextResponse.json({ error: orderItemError.message }, { status: 500 })
+
+  const hasOrderHistory = (orderItemCount ?? 0) > 0
+
+  if (hasOrderHistory) {
+    const archiveQuery = supabase
+      .from('products')
+      .update({
+        is_active: false,
+        is_featured: false,
+        is_new: false,
+        stock: 0,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+
+    if (!isAdmin) archiveQuery.eq('seller_id', user.id)
+
+    const { error } = await archiveQuery
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    return NextResponse.json({
+      success: true,
+      action: 'archived',
+      message: 'This product has order history, so it was archived instead of deleted.',
+    })
+  }
+
+  const cleanupTables = ['cart_items', 'wishlist_items', 'product_reviews'] as const
+  for (const table of cleanupTables) {
+    const { error } = await supabase.from(table).delete().eq('product_id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
   const query = supabase.from('products').delete().eq('id', id)
-  // Admins can delete any product; sellers only their own
   if (!isAdmin) query.eq('seller_id', user.id)
 
   const { error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, action: 'deleted', message: 'Product deleted permanently.' })
 }
 
 export async function PATCH(

@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/header'
+import { toast } from 'sonner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -130,15 +131,26 @@ export default function AdminDashboardPage() {
   const productAction = async (id: string, updates: any) => {
     setActionId(id)
     const r = await fetch('/api/admin/products', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: id, ...updates }) })
-    if (r.ok) setProducts(p => p.map(pr => pr.id === id ? { ...pr, ...updates } : pr))
+    if (r.ok) {
+      setProducts(p => p.map(pr => pr.id === id ? { ...pr, ...updates } : pr))
+    } else {
+      const payload = await r.json().catch(() => null)
+      toast.error(payload?.error ?? 'Failed to update product')
+    }
     setActionId(null)
   }
 
   const deleteProduct = async (id: string) => {
-    if (!confirm('Permanently delete this product?')) return
+    if (!confirm('Delete this product? Products with past orders will be archived instead of permanently removed.')) return
     setActionId(id)
     const r = await fetch('/api/admin/products', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: id }) })
-    if (r.ok) setProducts(p => p.filter(pr => pr.id !== id))
+    const payload = await r.json().catch(() => null)
+    if (r.ok) {
+      setProducts(p => p.filter(pr => pr.id !== id))
+      toast.success(payload?.message ?? 'Product removed')
+    } else {
+      toast.error(payload?.error ?? 'Failed to delete product')
+    }
     setActionId(null)
   }
 
