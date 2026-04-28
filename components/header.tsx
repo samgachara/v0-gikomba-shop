@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ShoppingBag, Search, Menu, User, Heart, LogOut, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -40,18 +40,15 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center">
             <Image
-              src="/gikomba-mark.svg"
-              alt="gikomba.shop logo"
-              width={40}
-              height={40}
-              className="h-10 w-10"
+              src="/logo.png"
+              alt="gikomba.shop"
+              width={140}
+              height={46}
+              className="h-10 w-auto object-contain"
               priority
             />
-            <span className="text-xl font-bold tracking-tight text-foreground">
-              gikomba<span className="text-primary">.shop</span>
-            </span>
           </Link>
 
           {/* Desktop Nav */}
@@ -170,15 +167,14 @@ export function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col gap-6 pt-6">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center">
                     <Image
-                      src="/gikomba-mark.svg"
-                      alt="gikomba.shop logo"
-                      width={32}
-                      height={32}
-                      className="h-8 w-8"
+                      src="/logo.png"
+                      alt="gikomba.shop"
+                      width={120}
+                      height={40}
+                      className="h-8 w-auto object-contain"
                     />
-                    <span className="text-lg font-bold">gikomba.shop</span>
                   </div>
                   <nav className="flex flex-col gap-4">
                     {navigation.map((item) => (
