@@ -1,347 +1,184 @@
-'use client'
+// lib/types.ts
+// Single source of truth for all shared types across the app.
+// Vendor has been removed — use Seller everywhere.
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Heart, ShoppingBag, Star, Loader2, Search, SlidersHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { cn } from '@/lib/utils'
-import { useCart } from '@/lib/cart-context'
-import { useAuth } from '@/lib/auth-context'
-import { Header } from '@/components/header'
-import { useProducts } from '@/hooks/use-products'
-import { useDebounce } from '@/hooks/use-debounce'
-import { toast } from 'sonner'
-
-const CATEGORIES = [
-  { value: 'all', label: 'All Categories' },
-  { value: 'women', label: "Women's Fashion" },
-  { value: 'men', label: "Men's Fashion" },
-  { value: 'electronics', label: 'Electronics' },
-  { value: 'home', label: 'Home & Living' },
-  { value: 'kids', label: 'Kids' },
-  { value: 'accessories', label: 'Accessories' },
-]
-
-const SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest Arrivals' },
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
-  { value: 'popular', label: 'Most Popular' },
-]
-
-function formatPrice(p: number) { return `KSh ${p.toLocaleString()}` }
-function getDiscount(price: number, orig: number | null) {
-  if (!orig || orig <= price) return null
-  return Math.round(((orig - price) / orig) * 100)
+export interface ApiResponse<T> {
+  data: T
+  success: boolean
+  message?: string
 }
 
-export default function ShopContent() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-
-  const [category, setCategory] = useState(searchParams.get('category') || 'all')
-  // Map ?filter= URL param to initial sort value
-  const filterParam = searchParams.get('filter')
-  const initialSort = filterParam === 'bestsellers' ? 'popular'
-    : filterParam === 'sale' ? 'price_asc'
-    : 'newest'
-  const [sort, setSort] = useState(initialSort)
-  const [search, setSearch] = useState('')
-  const [minPriceInput, setMinPriceInput] = useState('')
-  const [maxPriceInput, setMaxPriceInput] = useState('')
-  const [page, setPage] = useState(1)
-  const [addingId, setAddingId] = useState<string | null>(null)
-
-  const debouncedSearch = useDebounce(search, 400)
-  const minPrice = minPriceInput ? Number(minPriceInput) : null
-  const maxPrice = maxPriceInput ? Number(maxPriceInput) : null
-
-  const { products, isLoading, totalPages, hasNextPage, hasPrevPage } = useProducts({
-    category,
-    search: debouncedSearch,
-    featured: searchParams.get('filter') === 'new',
-    sort,
-    minPrice,
-    maxPrice,
-    page,
-    limit: 20,
-  })
-
-  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
-  const { user } = useAuth()
-
-  const resetPage = () => setPage(1)
-  const handleCategoryChange = (val: string) => { setCategory(val); resetPage() }
-  const handleSortChange = (val: string) => { setSort(val); resetPage() }
-  const handleSearchChange = (val: string) => { setSearch(val); resetPage() }
-
-  const hasActiveFilters = category !== 'all' || sort !== 'newest' || search || minPriceInput || maxPriceInput
-  const clearFilters = () => {
-    setCategory('all')
-    setSort('newest')
-    setSearch('')
-    setMinPriceInput('')
-    setMaxPriceInput('')
-    resetPage()
-  }
-
-  const handleAddToCart = async (productId: string, productName: string, inStock: boolean) => {
-    if (!inStock) return
-    if (!user) {
-      toast.error('Please sign in to add items to your cart', {
-        action: {
-          label: 'Sign In',
-          onClick: () => router.push('/auth/login'),
-        },
-      })
-      return
-    }
-    setAddingId(productId)
-    try {
-      await addToCart(productId)
-    } finally {
-      setAddingId(null)
-    }
-  }
-
-  const handleToggleWishlist = async (productId: string) => {
-    if (!user) {
-      toast.error('Please sign in to save items to your wishlist', {
-        action: {
-          label: 'Sign In',
-          onClick: () => router.push('/auth/login'),
-        },
-      })
-      return
-    }
-    isInWishlist(productId) ? await removeFromWishlist(productId) : await addToWishlist(productId)
-  }
-
-  return (
-    <>
-      <Header />
-      <main className="min-h-screen bg-background">
-        <div className="border-b border-border bg-secondary/30">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-            <h1 className="text-3xl font-bold text-foreground">
-              {filterParam === 'new' ? 'New Arrivals'
-                : filterParam === 'bestsellers' ? 'Best Sellers'
-                : filterParam === 'sale' ? 'Sale'
-                : 'Shop'}
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              {filterParam === 'new' ? 'The latest products just added'
-                : filterParam === 'bestsellers' ? 'Our most popular products'
-                : filterParam === 'sale' ? 'Great deals on selected items'
-                : 'Discover amazing deals on quality products'}
-            </p>
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          {/* Filter Bar */}
-          <div className="flex flex-col gap-3 mb-8">
-            {/* Row 1: Search + Sort */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  value={search}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={category} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={sort} onValueChange={handleSortChange}>
-                <SelectTrigger className="w-full sm:w-52">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SORT_OPTIONS.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Row 2: Price range + active filter pills */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="font-medium">KSh</span>
-                <Input
-                  type="number"
-                  placeholder="Min"
-                  value={minPriceInput}
-                  onChange={(e) => { setMinPriceInput(e.target.value); resetPage() }}
-                  className="w-28 h-8 text-sm"
-                />
-                <span>–</span>
-                <Input
-                  type="number"
-                  placeholder="Max"
-                  value={maxPriceInput}
-                  onChange={(e) => { setMaxPriceInput(e.target.value); resetPage() }}
-                  className="w-28 h-8 text-sm"
-                />
-              </div>
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 gap-1 text-muted-foreground hover:text-foreground">
-                  <X className="h-3.5 w-3.5" /> Clear filters
-                </Button>
-              )}
-              {!isLoading && (
-                <span className="text-sm text-muted-foreground ml-auto">
-                  {products.length > 0 ? `Showing ${products.length} products` : ''}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Grid */}
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-20 max-w-sm mx-auto">
-              <div className="text-5xl mb-4">🔍</div>
-              <p className="font-semibold text-lg mb-2">No products found</p>
-                {debouncedSearch && (
-                  <div className="text-sm text-muted-foreground mb-3 space-y-1">
-                    <p>Suggestions:</p>
-                    <ul className="list-disc list-inside text-left inline-block">
-                      <li>Check your spelling</li>
-                      <li>Try shorter or more general terms</li>
-                      <li>Browse by category instead</li>
-                    </ul>
-                  </div>
-                )}
-              <p className="text-muted-foreground text-sm mb-6">
-                Try a different search term, remove filters, or browse a category below.
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center mb-6">
-                {['Clothing','Shoes','Accessories','Electronics','Home & Living'].map(s => (
-                  <button key={s} onClick={() => handleCategoryChange(s.toLowerCase().replace(' & ','-'))}
-                    className="px-3 py-1 text-xs rounded-full border border-border hover:border-primary hover:text-primary transition-colors">
-                    {s}
-                  </button>
-                ))}
-              </div>
-              <Button variant="outline" onClick={clearFilters}>Clear all filters</Button>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-                {products.map((product) => {
-                  const discount = getDiscount(product.price, product.original_price ?? null)
-                  const inWishlist = isInWishlist(product.id)
-                  const inStock = (product.stock ?? 1) > 0
-                  const lowStock = inStock && (product.stock ?? 99) <= 5
-                  const isAdding = addingId === product.id
-
-                  return (
-                    <div key={product.id} className="group relative flex flex-col overflow-hidden rounded-xl bg-card border border-border">
-                      <Link href={`/product/${product.id}`} className="relative aspect-[3/4] overflow-hidden">
-                        <img
-                          src={product.image_url || 'https://via.placeholder.com/400x500'}
-                          alt={product.name}
-                          className={cn(
-                            'h-full w-full object-cover transition-transform duration-300 group-hover:scale-105',
-                            !inStock && 'opacity-60 grayscale'
-                          )}
-                          loading="lazy"
-                        />
-                        {/* Top-left badges */}
-                        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                          {!inStock && (
-                            <Badge className="bg-gray-600 text-white text-[10px]">Out of Stock</Badge>
-                          )}
-                          {inStock && lowStock && (
-                            <Badge className="bg-orange-500 text-white text-[10px]">Only {product.stock} left</Badge>
-                          )}
-                          {inStock && !lowStock && product.is_new && (
-                            <Badge className="bg-accent text-accent-foreground text-[10px]">New</Badge>
-                          )}
-                          {discount && <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px]">{discount}% Off</Badge>}
-                        </div>
-                      </Link>
-
-                      {/* Wishlist button */}
-                      <button
-                        onClick={() => handleToggleWishlist(product.id)}
-                        className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm"
-                        aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                      >
-                        <Heart className={cn('h-4 w-4 transition-colors', inWishlist ? 'fill-primary text-primary' : 'text-muted-foreground')} />
-                      </button>
-
-                      {/* Hover Add to Cart */}
-                      <div className="absolute inset-x-3 bottom-[140px] opacity-0 translate-y-2 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
-                        <Button
-                          className="w-full gap-2"
-                          size="sm"
-                          disabled={!inStock || isAdding}
-                          onClick={() => handleAddToCart(product.id, product.name, inStock)}
-                        >
-                          {isAdding
-                            ? <Loader2 className="h-4 w-4 animate-spin" />
-                            : <ShoppingBag className="h-4 w-4" />
-                          }
-                          {!inStock ? 'Out of Stock' : isAdding ? 'Adding...' : 'Add to Cart'}
-                        </Button>
-                      </div>
-
-                      <div className="flex flex-col gap-2 p-4">
-                        <Link href={`/product/${product.id}`}>
-                          <h3 className="text-sm font-medium line-clamp-1 hover:text-primary transition-colors">{product.name}</h3>
-                        </Link>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                          <span className="text-xs text-muted-foreground">{product.rating} ({product.review_count})</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-base font-semibold">{formatPrice(product.price)}</span>
-                          {product.original_price && (
-                            <span className="text-sm text-muted-foreground line-through">{formatPrice(product.original_price)}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-4 mt-12">
-                  <Button variant="outline" size="icon" onClick={() => setPage(p => p - 1)} disabled={!hasPrevPage}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-                  <Button variant="outline" size="icon" onClick={() => setPage(p => p + 1)} disabled={!hasNextPage}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </main>
-    </>
-  )
+export interface Product {
+  id: string
+  name: string
+  title?: string | null        // alias used in some DB rows — prefer name
+  description: string | null
+  price: number
+  original_price?: number | null
+  image_url: string | null
+  category: string
+  stock: number
+  quality_grade?: 'A' | 'B' | 'C' | null
+  rating?: number
+  review_count?: number
+  num_reviews?: number
+  is_featured?: boolean
+  is_new?: boolean
+  is_active?: boolean
+  seller_id?: string | null
+  tags?: string[] | null
+  condition?: string | null
+  created_at: string
+  updated_at?: string
 }
+
+export interface Profile {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  phone: string | null
+  address: string | null
+  city: string | null
+  role: 'buyer' | 'seller' | 'admin'
+  created_at: string
+  updated_at: string
+}
+
+// ── Seller ────────────────────────────────────────────────────────────────
+// Matches the `sellers` table. Use this everywhere — Vendor is gone.
+export interface Seller {
+  id: string
+  user_id?: string | null
+  store_name: string
+  store_description: string | null
+  phone?: string | null          // used for WhatsApp routing
+  verified: boolean
+  status: 'active' | 'inactive' | 'suspended'
+  commission_rate?: number | null
+  total_sales?: number | null
+  rating?: number | null
+  num_reviews?: number | null
+  created_at: string
+  updated_at?: string
+}
+
+export interface CartItem {
+  id: string
+  user_id: string
+  product_id: string
+  quantity: number
+  created_at: string
+  updated_at: string
+  product?: Product
+}
+
+export interface WishlistItem {
+  id: string
+  user_id: string
+  product_id: string
+  created_at: string
+  product?: Product
+}
+
+export interface Order {
+  id: string
+  user_id: string
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
+  total: number
+  shipping_address: string
+  shipping_city: string
+  phone: string
+  payment_method: 'mpesa' | 'card'
+  payment_status: 'pending' | 'completed' | 'failed'
+  mpesa_transaction_id: string | null
+  created_at: string
+  updated_at: string
+  items?: OrderItem[]
+}
+
+export interface OrderItem {
+  id: string
+  order_id: string
+  product_id: string
+  quantity: number
+  price: number
+  created_at: string
+  product?: Product
+}
+
+export interface SellerEarnings {
+  id: string
+  seller_id: string
+  amount: number
+  net_amount: number
+  commission_amount: number
+  status: string
+  mpesa_phone: string | null
+  mpesa_receipt: string | null
+  period_start: string | null
+  period_end: string | null
+  created_at: string
+}
+
+// ── M-Pesa phone utility ──────────────────────────────────────────────────
+// Safaricom STK push requires the number in 254XXXXXXXXX format (12 digits).
+// This function accepts any common Kenyan format and normalises it.
+// Returns null if the number cannot be normalised — always validate before use.
+//
+// Accepted input formats:
+//   0712345678   → 254712345678
+//   +254712345678 → 254712345678
+//   254712345678 → 254712345678  (already correct)
+//   712345678    → 254712345678  (9-digit local)
+//
+// Usage:
+//   const phone = normaliseMpesaPhone(userInput)
+//   if (!phone) return { error: 'Invalid phone number' }
+//   // use phone in STK push request
+
+export function normaliseMpesaPhone(raw: string): string | null {
+  if (!raw) return null
+
+  // Strip all whitespace, dashes, parentheses
+  const cleaned = raw.replace(/[\s\-()]/g, '')
+
+  // +254XXXXXXXXX → 254XXXXXXXXX
+  if (/^\+254\d{9}$/.test(cleaned)) {
+    return cleaned.slice(1)
+  }
+
+  // 254XXXXXXXXX — already correct format
+  if (/^254\d{9}$/.test(cleaned)) {
+    return cleaned
+  }
+
+  // 07XXXXXXXX or 01XXXXXXXX (10-digit starting with 0)
+  if (/^0[17]\d{8}$/.test(cleaned)) {
+    return '254' + cleaned.slice(1)
+  }
+
+  // 7XXXXXXXX or 1XXXXXXXX (9-digit, no leading 0)
+  if (/^[17]\d{8}$/.test(cleaned)) {
+    return '254' + cleaned
+  }
+
+  return null // unrecognised format
+}
+
+// Helper — returns a user-friendly error message for invalid phone input
+export function validateMpesaPhone(raw: string): { valid: true; phone: string } | { valid: false; error: string } {
+  const phone = normaliseMpesaPhone(raw)
+  if (!phone) {
+    return {
+      valid: false,
+      error: 'Enter a valid Safaricom number (e.g. 0712 345 678)',
+    }
+  }
+  return { valid: true, phone }
+}
+
+// ── @deprecated Vendor ────────────────────────────────────────────────────
+// Kept only to avoid breaking any old import — remove once all references
+// have been updated to use Seller.
+/** @deprecated Use Seller instead */
+export type Vendor = Seller
