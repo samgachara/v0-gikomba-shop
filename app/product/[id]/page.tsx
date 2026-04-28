@@ -15,7 +15,7 @@ import { useAuth } from '@/lib/auth-context'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
-const WHATSAPP_NUMBER = '254736906440'
+const FALLBACK_WHATSAPP = '254736906440'
 
 interface Review {
   id: string
@@ -48,13 +48,13 @@ export default function ProductDetailPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   // Review form
-  const [showReviewForm, setShowReviewForm] = useState(false)
-  const [reviewRating,   setReviewRating]   = useState(5)
-  const [reviewComment,  setReviewComment]  = useState('')
+  const [showReviewForm,   setShowReviewForm]   = useState(false)
+  const [reviewRating,     setReviewRating]     = useState(5)
+  const [reviewComment,    setReviewComment]    = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
-  const [reviewError,    setReviewError]    = useState<string | null>(null)
+  const [reviewError,      setReviewError]      = useState<string | null>(null)
 
-  // ── Fetch product + seller + reviews ────────────────────────────────────────
+  // ── Fetch product + seller + reviews ──────────────────────────────────
   const fetchAll = useCallback(async () => {
     if (!id) return
     const supabase = createClient()
@@ -73,9 +73,10 @@ export default function ProductDetailPage() {
     setReviews(reviewsData ?? [])
 
     if (productData.seller_id) {
+      // FIX: include phone so WhatsApp routes to the actual seller
       const { data: sellerData } = await supabase
         .from('sellers')
-        .select('id, store_name, verified')
+        .select('id, store_name, verified, phone')
         .eq('id', productData.seller_id)
         .single()
       if (sellerData) setSeller(sellerData)
@@ -86,7 +87,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
-  // ── Admin check (separate effect so it fires after user loads) ───────────────
+  // ── Admin check ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) { setIsAdmin(false); return }
     const supabase = createClient()
@@ -94,14 +95,10 @@ export default function ProductDetailPage() {
       .then(({ data }) => setIsAdmin(data?.role === 'admin'))
   }, [user])
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
+  // ── Handlers ──────────────────────────────────────────────────────────
+
+  // FIX: removed the user-gate — cart-context already handles guests via localStorage
   const handleAddToCart = async () => {
-    if (!user) {
-      toast.error('Please sign in to add items to your cart', {
-        action: { label: 'Sign In', onClick: () => router.push('/auth/login') },
-      })
-      return
-    }
     setAdding(true)
     await addToCart(product.id)
     setAdding(false)
@@ -117,13 +114,17 @@ export default function ProductDetailPage() {
     inWishlist ? await removeFromWishlist(product.id) : await addToWishlist(product.id)
   }
 
+  // FIX: use seller phone when available, fall back to admin number
   const handleWhatsApp = () => {
+    const number      = seller?.phone ?? FALLBACK_WHATSAPP
     const productName = product.name || product.title || 'this product'
-    const productUrl  = typeof window !== 'undefined' ? window.location.href : `https://gikomba.shop/product/${id}`
+    const productUrl  = typeof window !== 'undefined'
+      ? window.location.href
+      : `https://gikomba.shop/product/${id}`
     const message = encodeURIComponent(
       `Hi! 👋 I'm interested in *${productName}* (KSh ${product.price?.toLocaleString()}) on gikomba.shop.\n\n${productUrl}\n\nIs it available?`
     )
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank')
+    window.open(`https://wa.me/${number}?text=${message}`, '_blank')
   }
 
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -166,7 +167,7 @@ export default function ProductDetailPage() {
     setDeletingId(null)
   }
 
-  // ── Loading ──────────────────────────────────────────────────────────────────
+  // ── Loading ────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -175,15 +176,14 @@ export default function ProductDetailPage() {
     )
   }
 
-  const inStock   = (product.stock ?? 1) > 0
-  const lowStock  = inStock && (product.stock ?? 99) <= 5
+  const inStock  = (product.stock ?? 1) > 0
+  const lowStock = inStock && (product.stock ?? 99) <= 5
   const inWishlist = isInWishlist(product.id)
-  const fmtPrice  = (p: number) => `KSh ${p.toLocaleString()}`
-  const discount  = product.original_price && product.original_price > product.price
+  const fmtPrice = (p: number) => `KSh ${p.toLocaleString()}`
+  const discount = product.original_price && product.original_price > product.price
     ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
     : null
 
-  // Compute real avg rating
   const avgRating = reviews.length > 0
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null
@@ -306,9 +306,9 @@ export default function ProductDetailPage() {
               {/* Trust badges */}
               <div className="mt-10 grid grid-cols-3 gap-4 border-t border-border pt-8">
                 {[
-                  { icon: Truck,       title: 'Fast Delivery',    sub: 'Within 24–48 hours' },
-                  { icon: ShieldCheck, title: 'Secure Payment',   sub: 'M-Pesa & Card' },
-                  { icon: RotateCcw,   title: 'Easy Returns',     sub: '7-day policy' },
+                  { icon: Truck,       title: 'Fast Delivery',  sub: 'Within 24–48 hours' },
+                  { icon: ShieldCheck, title: 'Secure Payment', sub: 'M-Pesa & Card' },
+                  { icon: RotateCcw,   title: 'Easy Returns',   sub: '7-day policy' },
                 ].map(({ icon: Icon, title, sub }) => (
                   <div key={title} className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary flex-shrink-0">
@@ -366,9 +366,7 @@ export default function ProductDetailPage() {
                       onChange={e => setReviewComment(e.target.value)}
                     />
                   </div>
-                  {reviewError && (
-                    <p className="text-sm text-destructive">{reviewError}</p>
-                  )}
+                  {reviewError && <p className="text-sm text-destructive">{reviewError}</p>}
                   <div className="flex gap-3">
                     <Button type="submit" disabled={submittingReview} className="gap-2">
                       {submittingReview ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -393,8 +391,7 @@ export default function ProductDetailPage() {
               <div className="space-y-6">
                 {reviews.map(review => {
                   const p = Array.isArray(review.profiles) ? review.profiles[0] : review.profiles
-                  const name = [p?.first_name, p?.last_name]
-                    .filter(Boolean).join(' ') || 'Anonymous'
+                  const name = [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Anonymous'
                   return (
                     <div key={review.id} className="border-b border-border pb-6 last:border-0">
                       <div className="flex items-start justify-between mb-2">
@@ -404,11 +401,11 @@ export default function ProductDetailPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-medium text-sm">{name}</p>
-                            {review.is_verified_purchase && (
-                              <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full font-medium">✓ Verified Purchase</span>
-                            )}
-                          </div>
+                              <p className="font-medium text-sm">{name}</p>
+                              {review.is_verified_purchase && (
+                                <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full font-medium">✓ Verified Purchase</span>
+                              )}
+                            </div>
                             <p className="text-xs text-muted-foreground">
                               {new Date(review.created_at).toLocaleDateString('en-KE', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </p>
