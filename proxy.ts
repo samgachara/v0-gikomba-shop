@@ -1,7 +1,13 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { SITE_HOST, SITE_URL } from '@/lib/site'
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.hostname === `www.${SITE_HOST}`) {
+    const redirectUrl = new URL(`${SITE_URL}${request.nextUrl.pathname}${request.nextUrl.search}`)
+    return NextResponse.redirect(redirectUrl, 308)
+  }
+
   const response = NextResponse.next({ request })
 
   const supabase = createServerClient(

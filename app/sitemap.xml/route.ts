@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { SITE_URL } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
-
-const URL = 'https://www.gikomba.shop'
 
 export async function GET() {
   const supabase = await createClient()
@@ -18,19 +17,26 @@ export async function GET() {
   }
 
   const productUrls = (products || []).map(product => ({
-    url: `${URL}/product/${product.id}`,
+    url: `${SITE_URL}/product/${product.id}`,
     lastModified: product.updated_at || new Date().toISOString(),
     changeFrequency: 'daily' as const,
     priority: 0.7,
   }))
 
   const staticUrls = [
-    { url: URL, lastModified: new Date().toISOString(), changeFrequency: 'daily' as const, priority: 1.0 },
-    { url: `${URL}/shop`, lastModified: new Date().toISOString(), changeFrequency: 'daily' as const, priority: 0.9 },
-    { url: `${URL}/cart`, lastModified: new Date().toISOString(), changeFrequency: 'weekly' as const, priority: 0.5 },
-    { url: `${URL}/wishlist`, lastModified: new Date().toISOString(), changeFrequency: 'weekly' as const, priority: 0.5 },
-    { url: `${URL}/auth/login`, lastModified: new Date().toISOString(), changeFrequency: 'monthly' as const, priority: 0.3 },
-    { url: `${URL}/auth/sign-up`, lastModified: new Date().toISOString(), changeFrequency: 'monthly' as const, priority: 0.3 },
+    { url: SITE_URL, lastModified: new Date().toISOString(), changeFrequency: 'daily' as const, priority: 1.0 },
+    { url: `${SITE_URL}/shop`, lastModified: new Date().toISOString(), changeFrequency: 'daily' as const, priority: 0.9 },
+    { url: `${SITE_URL}/about`, lastModified: new Date().toISOString(), changeFrequency: 'weekly' as const, priority: 0.8 },
+    { url: `${SITE_URL}/contact`, lastModified: new Date().toISOString(), changeFrequency: 'weekly' as const, priority: 0.8 },
+    { url: `${SITE_URL}/faq`, lastModified: new Date().toISOString(), changeFrequency: 'weekly' as const, priority: 0.8 },
+    { url: `${SITE_URL}/shipping`, lastModified: new Date().toISOString(), changeFrequency: 'weekly' as const, priority: 0.7 },
+    { url: `${SITE_URL}/returns`, lastModified: new Date().toISOString(), changeFrequency: 'weekly' as const, priority: 0.7 },
+    { url: `${SITE_URL}/privacy`, lastModified: new Date().toISOString(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${SITE_URL}/terms`, lastModified: new Date().toISOString(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${SITE_URL}/cookies`, lastModified: new Date().toISOString(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${SITE_URL}/careers`, lastModified: new Date().toISOString(), changeFrequency: 'weekly' as const, priority: 0.6 },
+    { url: `${SITE_URL}/blog`, lastModified: new Date().toISOString(), changeFrequency: 'daily' as const, priority: 0.8 },
+    { url: `${SITE_URL}/press`, lastModified: new Date().toISOString(), changeFrequency: 'weekly' as const, priority: 0.6 },
   ]
 
   const allUrls = [...staticUrls, ...productUrls]

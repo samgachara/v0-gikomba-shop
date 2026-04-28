@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/lib/auth-context'
 import { CartProvider } from '@/lib/cart-context'
 import { Toaster } from '@/components/ui/sonner'
+import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
 const dmSans = DM_Sans({
@@ -17,26 +18,27 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://gikomba.shop'),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Gikomba Shop – Affordable Fashion for Kenya',
+    default: 'Gikomba Shop - Affordable Fashion for Kenya',
     template: '%s | Gikomba Shop',
   },
-  description:
-    'Shop affordable fashion, electronics, and home goods at gikomba.shop. Quality products at unbeatable prices, delivered across Kenya with M-Pesa.',
-  keywords: ['online shopping Kenya', 'Gikomba', 'fashion Kenya', 'M-Pesa shopping', 'electronics Kenya'],
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
-    title: 'Gikomba Shop – Affordable Fashion for Kenya',
-    description:
-      "Kenya's favorite online marketplace. Quality products at unbeatable prices, delivered to your doorstep.",
-    url: 'https://gikomba.shop',
-    siteName: 'Gikomba Shop',
+    title: 'Gikomba Shop - Affordable Fashion for Kenya',
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Gikomba Shop – Kenya\'s Favorite Online Marketplace',
+        alt: 'Gikomba Shop - Kenya\'s trusted online marketplace',
       },
     ],
     locale: 'en_KE',
@@ -44,8 +46,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Gikomba Shop – Affordable Fashion for Kenya',
-    description: "Kenya's favorite online marketplace.",
+    title: 'Gikomba Shop - Affordable Fashion for Kenya',
+    description: SITE_DESCRIPTION,
     images: ['/og-image.png'],
   },
   icons: {
@@ -58,6 +60,42 @@ export const metadata: Metadata = {
   },
 }
 
+const siteSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/apple-icon.png`,
+      contactPoint: [
+        {
+          '@type': 'ContactPoint',
+          telephone: '+254736906440',
+          contactType: 'customer support',
+          areaServed: 'KE',
+          availableLanguage: ['en'],
+        },
+      ],
+      sameAs: [
+        'https://www.facebook.com/gikombashop',
+        'https://www.instagram.com/gikombashop',
+        'https://twitter.com/gikombashop',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      name: SITE_NAME,
+      url: SITE_URL,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE_URL}/shop?search={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -68,6 +106,10 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }}
+        />
         <AuthProvider>
           <CartProvider>
             {children}

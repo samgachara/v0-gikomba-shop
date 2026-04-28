@@ -1,10 +1,6 @@
-// app/product/[id]/layout.tsx
-// This is a SERVER component — do NOT add 'use client'
-// It generates dynamic OpenGraph metadata so WhatsApp/Twitter/Facebook
-// show the actual product image and name when someone shares a product link.
-
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { SITE_NAME, SITE_URL } from '@/lib/site'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -24,25 +20,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!product) {
       return {
-        title: 'Product | Gikomba Shop',
+        title: 'Product',
         description: "Shop quality products on Kenya's trusted online marketplace.",
       }
     }
 
-    const title   = `${product.name} – KSh ${product.price?.toLocaleString()} | Gikomba Shop`
-    const desc    = product.description
-      ?? `Buy ${product.name} on Gikomba Shop. Quality ${product.category ?? 'products'} with M-Pesa payments and delivery across Kenya.`
-    const imageUrl = product.image_url ?? 'https://gikomba.shop/og-default.jpg'
-    const pageUrl  = `https://gikomba.shop/product/${id}`
+    const cleanDescription = product.description?.trim()
+    const description =
+      cleanDescription && cleanDescription.length >= 20
+        ? cleanDescription
+        : `Buy ${product.name} on Gikomba Shop. Quality ${product.category ?? 'products'} with M-Pesa payments and delivery across Kenya.`
+    const title = `${product.name} - KSh ${product.price?.toLocaleString()}`
+    const imageUrl = product.image_url ?? `${SITE_URL}/og-image.png`
+    const canonicalUrl = `${SITE_URL}/product/${id}`
 
     return {
       title,
-      description: desc,
+      description,
+      alternates: {
+        canonical: canonicalUrl,
+      },
       openGraph: {
         title,
-        description: desc,
-        url: pageUrl,
-        siteName: 'Gikomba Shop',
+        description,
+        url: canonicalUrl,
+        siteName: SITE_NAME,
         images: [
           {
             url: imageUrl,
@@ -57,13 +59,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       twitter: {
         card: 'summary_large_image',
         title,
-        description: desc,
+        description,
         images: [imageUrl],
       },
     }
   } catch {
     return {
-      title: 'Product | Gikomba Shop',
+      title: 'Product',
       description: "Shop quality products on Kenya's trusted online marketplace.",
     }
   }
