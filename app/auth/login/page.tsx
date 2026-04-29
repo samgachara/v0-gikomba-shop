@@ -14,8 +14,8 @@ import { FcGoogle } from 'react-icons/fc'
 
 // Maps profile role → correct dashboard URL
 function dashboardPathForRole(role: string | null | undefined): string {
-  if (role === 'admin')  return '/admin'
-  if (role === 'seller') return '/seller/dashboard'
+  if (role === 'admin')  return '/dashboard/admin'
+  if (role === 'seller') return '/dashboard/seller'
   return '/'
 }
 
