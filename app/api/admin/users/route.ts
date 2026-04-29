@@ -1,84 +1,53 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
 
-async function requireAdmin(supabase: any, user: any) {
-  const { data: p } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  return p?.role === 'admin'
-}
-
-export async function GET(request: Request) {
-  const supabase = await createClient()
+async function requireAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!await requireAdmin(supabase, user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
-  const { searchParams } = new URL(request.url)
-  const role   = searchParams.get('role')
-  const search = searchParams.get('search')
-  const limit  = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
-  const offset = parseInt(searchParams.get('offset') || '0')
-
-  let query = supabase
-    .from('profiles')
-    .select('id, first_name, last_name, phone, role, created_at', { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (role) query = query.eq('role', role)
-  if (search) query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%`)
-
-  const { data, count, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ users: data ?? [], total: count ?? 0 })
+  if (!user) return { error: 'Unauthorized', status: 401 }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') return { error: 'Forbidden', status: 403 }
+  return { user }
 }
 
-const UpdateRoleSchema = z.object({
-  user_id: z.string().uuid(),
-  role: z.enum(['buyer', 'seller', 'admin']),
-})
+export async function GET() {
+  const supabase = await createClient()
+  const guard = await requireAdmin(supabase)
+  if ('error' in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
+
+  // profiles doesn't store email — we join what we can
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name, phone, role, is_active, created_at')
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ users: data ?? [] })
+}
 
 export async function PATCH(request: Request) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!await requireAdmin(supabase, user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const guard = await requireAdmin(supabase)
+  if ('error' in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
 
-  const body = await request.json()
-  const { user_id, role } = UpdateRoleSchema.parse(body)
+  const { user_id, role, is_active } = await request.json()
+  if (!user_id) return NextResponse.json({ error: 'user_id required' }, { status: 400 })
 
-  // Prevent admin from demoting themselves
-  if (user_id === user.id && role !== 'admin')
-    return NextResponse.json({ error: 'Cannot change your own admin role' }, { status: 400 })
-
-  const { error } = await supabase
-    .from('profiles').update({ role }).eq('id', user_id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  // If promoting to seller, ensure sellers row exists
-  if (role === 'seller') {
-    const { data: profile } = await supabase.from('profiles').select('first_name').eq('id', user_id).single()
-    await supabase.from('sellers').upsert({
-      id: user_id,
-      store_name: `${profile?.first_name ?? 'New'}'s Shop`,
-      status: 'active', verified: false,
-    }, { onConflict: 'id' })
+  if (role) {
+    // Use the RPC which handles seller row creation + last-admin guard
+    const { error } = await supabase.rpc('admin_set_user_role', {
+      p_user_id: user_id,
+      p_role: role,
+    })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
-}
+  if (is_active !== undefined) {
+    const { error } = await supabase.rpc('admin_set_user_active', {
+      p_user_id: user_id,
+      p_active: is_active,
+    })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
-export async function DELETE(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!await requireAdmin(supabase, user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
-  const { user_id } = await request.json()
-  if (user_id === user.id) return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 })
-
-  // Delete from auth.users cascades to profiles via FK
-  const { error } = await supabase.auth.admin.deleteUser(user_id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
 }
