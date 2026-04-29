@@ -35,16 +35,55 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // ── Auth-required routes — redirect to login if not signed in ──────────────
-  const authRequiredPaths = [
-    '/account',
-    '/checkout',
-    '/wishlist',
-    '/cart',
-    '/seller',   // covers /seller/dashboard, /seller/products/*
-    '/admin',    // covers /admin/dashboard
-  ]
+  // ── Fetch role from profiles if user is logged in ──────────────────────────
+  let role: string | null = null
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    role = profile?.role ?? null
+  }
 
+  // ── Admin: locked to your email only ──────────────────────────────────────
+  if (pathname.startsWith('/admin')) {
+    if (!user || user.email !== 'samgachara5@gmail.com') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // ── Seller: must be logged in with role = 'seller' or 'admin' ─────────────
+  if (pathname.startsWith('/seller')) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      return NextResponse.redirect(url)
+    }
+    if (role !== 'seller' && role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // ── Post-login redirect: send users to their dashboard automatically ───────
+  if (pathname === '/auth/login' && user) {
+    const url = request.nextUrl.clone()
+    if (user.email === 'samgachara5@gmail.com') {
+      url.pathname = '/admin/dashboard'
+    } else if (role === 'seller') {
+      url.pathname = '/seller/dashboard'
+    } else {
+      url.pathname = '/'
+    }
+    return NextResponse.redirect(url)
+  }
+
+  // ── Other auth-required routes ─────────────────────────────────────────────
+  const authRequiredPaths = ['/account', '/checkout', '/wishlist', '/cart']
   if (authRequiredPaths.some(path => pathname.startsWith(path)) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
