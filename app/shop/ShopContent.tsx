@@ -36,6 +36,8 @@ interface ShopContentProps {
   initialState: ShopQueryState
 }
 
+// FIX: The API returns { products, total, page, limit, pages } directly.
+// The old fetcher was reading payload.data which is always undefined.
 const fetcher = async (url: string): Promise<ShopProductsResult> => {
   const response = await fetch(url)
 
@@ -44,7 +46,9 @@ const fetcher = async (url: string): Promise<ShopProductsResult> => {
   }
 
   const payload = await response.json()
-  return payload.data as ShopProductsResult
+
+  // API returns the shape directly — no .data wrapper
+  return payload as ShopProductsResult
 }
 
 export default function ShopContent({ initialData, initialState }: ShopContentProps) {
