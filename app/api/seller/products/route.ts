@@ -1,71 +1,83 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+async function requireSeller(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized', status: 401 }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, is_active')
+    .eq('id', user.id)
+    .single()
+  if (!profile || !['seller', 'admin'].includes(profile.role)) {
+    return { error: 'Seller account required', status: 403 }
+  }
+  if (!profile.is_active) return { error: 'Account suspended', status: 403 }
+  return { user }
+}
+
+// ── GET /api/seller/products ─────────────────────────────────────────────────
 export async function GET() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const guard = await requireSeller(supabase)
+  if ('error' in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
 
+  // Query products directly — seller only sees their own (RLS + explicit filter)
   const { data, error } = await supabase
     .from('products')
-    .select('*')
-    .eq('seller_id', user.id)
+    .select(`
+      id, title, name, price, original_price, category, stock,
+      is_active, is_featured, is_new, condition, quality_grade,
+      image_url, images, tags, rating, num_reviews, created_at, updated_at
+    `)
+    .eq('seller_id', guard.user.id)
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  const products = (data ?? []).map((p: any) => ({
+    ...p,
+    name: p.name ?? p.title,
+  }))
+
+  return NextResponse.json({ products })
 }
 
+// ── POST /api/seller/products ────────────────────────────────────────────────
 export async function POST(request: Request) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!['seller', 'admin'].includes(profile?.role ?? '')) {
-    return NextResponse.json({ error: 'Only sellers can add products' }, { status: 403 })
-  }
+  const guard = await requireSeller(supabase)
+  if ('error' in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
 
   const body = await request.json()
-  const { name, description, price, original_price, category, stock, image_url } = body
+  const { name, description, price, original_price, category, stock, condition, quality_grade, image_url, images, tags } = body
 
-  if (!name?.trim() || !price || !category || stock === undefined) {
-    return NextResponse.json({ error: 'Name, price, category and stock are required' }, { status: 400 })
-  }
-  if (isNaN(Number(price)) || Number(price) <= 0) {
-    return NextResponse.json({ error: 'Price must be a positive number' }, { status: 400 })
-  }
-  if (isNaN(Number(stock)) || Number(stock) < 0) {
-    return NextResponse.json({ error: 'Stock must be 0 or more' }, { status: 400 })
+  if (!name || !price || !category) {
+    return NextResponse.json({ error: 'name, price, and category are required' }, { status: 400 })
   }
 
   const { data, error } = await supabase
     .from('products')
     .insert({
-      title:          name.trim(),   // canonical field
-      name:           name.trim(),   // kept in sync via trigger
-      description:    description?.trim() || null,
+      seller_id:      guard.user.id,
+      title:          name,
+      name,
+      description,
       price:          Number(price),
       original_price: original_price ? Number(original_price) : null,
-      category:       category.trim(),
-      stock:          Number(stock),
-      image_url:      image_url?.trim() || null,
-      seller_id:      user.id,
-      is_new:         true,
-      is_featured:    false,
+      category,
+      stock:          Number(stock ?? 0),
+      condition:      condition ?? 'used',
+      quality_grade:  quality_grade ?? null,
+      image_url:      image_url ?? null,
+      images:         images ?? [],
+      tags:           tags ?? [],
       is_active:      true,
-      rating:         0,
-      review_count:   0,
-      num_reviews:    0,
+      is_new:         true,
     })
     .select()
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data, { status: 201 })
+  return NextResponse.json({ product: data }, { status: 201 })
 }
