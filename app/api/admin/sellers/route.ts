@@ -1,113 +1,44 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { ApproveSelllerSchema } from '@/lib/validations'
-import { handleError, logInfo } from '@/lib/api-error'
 
-// GET /api/admin/sellers — list all sellers (any status)
-export async function GET(request: Request) {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    // Verify admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status') // pending | approved | rejected | suspended
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
-    const offset = parseInt(searchParams.get('offset') || '0')
-
-    logInfo('Admin fetching sellers', { status })
-
-    let query = supabase
-      .from('sellers')
-      .select(
-        `id, store_name, description, status, verified, phone, location, logo_url, created_at,
-         profiles:profiles!sellers_id_fkey(id, first_name, last_name, phone, role)`,
-        { count: 'exact' }
-      )
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
-
-    if (status) query = query.eq('status', status)
-
-    const { data, error, count } = await query
-
-    if (error) throw error
-
-    return NextResponse.json({ sellers: data ?? [], pagination: { total: count ?? 0, limit, offset } })
-  } catch (error) {
-    return handleError(error)
-  }
+async function requireAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized', status: 401 }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') return { error: 'Forbidden', status: 403 }
+  return { user }
 }
 
-// PATCH /api/admin/sellers — approve, reject, or suspend a seller
+export async function GET() {
+  const supabase = await createClient()
+  const guard = await requireAdmin(supabase)
+  if ('error' in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
+
+  const { data, error } = await supabase
+    .from('sellers')
+    .select(`
+      id, store_name, status, verified, created_at,
+      profiles ( first_name, last_name, phone )
+    `)
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ sellers: data ?? [] })
+}
+
 export async function PATCH(request: Request) {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+  const supabase = await createClient()
+  const guard = await requireAdmin(supabase)
+  if ('error' in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
 
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { seller_id, status, verified } = await request.json()
+  if (!seller_id) return NextResponse.json({ error: 'seller_id required' }, { status: 400 })
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (status    !== undefined) updates.status   = status
+  if (verified  !== undefined) updates.verified = verified
 
-    if (profile?.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    const body = await request.json()
-    const { seller_id, status, verified } = ApproveSelllerSchema.parse(body)
-
-    logInfo('Admin updating seller status', { seller_id, status, by: user.id })
-
-    const updatePayload: Record<string, unknown> = { status, updated_at: new Date().toISOString() }
-    if (verified !== undefined) updatePayload.verified = verified
-
-    const { data, error } = await supabase
-      .from('sellers')
-      .update(updatePayload)
-      .eq('id', seller_id)
-      .select()
-      .single()
-
-    if (error || !data) {
-      return NextResponse.json({ error: 'Seller not found' }, { status: 404 })
-    }
-
-    // If approved, ensure profile role is 'seller'
-    if (status === 'active') {
-      await supabase
-        .from('profiles')
-        .update({ role: 'seller' })
-        .eq('id', seller_id)
-    }
-
-    // If suspended, downgrade profile role back to 'buyer'
-    if (status === 'suspended') {
-      await supabase
-        .from('profiles')
-        .update({ role: 'buyer' })
-        .eq('id', seller_id)
-    }
-
-    logInfo('Seller status updated', { seller_id, status })
-
-    return NextResponse.json(data)
-  } catch (error) {
-    return handleError(error)
-  }
+  const { error } = await supabase.from('sellers').update(updates).eq('id', seller_id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
 }
