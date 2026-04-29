@@ -1,99 +1,148 @@
-import { z } from 'zod'
-import { getAuthUser, ok, fail, parseBody } from '@/lib/api-handler'
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-const schema = z.object({ product_id: z.string().uuid('Invalid product ID') })
+async function getSupabaseServerClient() {
+  const cookieStore = await cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options)
+          })
+        },
+      },
+    }
+  )
+}
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { user, supabase } = await getAuthUser()
-    if (!user) return fail('Unauthorized', 401)
+    const supabase = await getSupabaseServerClient()
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      // Not logged in — return empty wishlist silently, not an error
+      return NextResponse.json({ items: [] }, { status: 200 })
+    }
 
     const { data, error } = await supabase
-      .from('wishlist_items')
-      .select('*, product:products(*)')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+      .from("wishlist_items")
+      .select(`
+        id,
+        product_id,
+        created_at,
+        products (
+          id,
+          title,
+          price,
+          image_url,
+          images,
+          is_active,
+          seller_id
+        )
+      `)
+      .eq("user_id", user.id)
 
     if (error) {
-      console.error('[wishlist/GET] Database error:', error.message)
-      // If the join fails, try without the join to see if it's a relationship issue
-      const { data: simpleData, error: simpleError } = await supabase
-        .from('wishlist_items')
-        .select('*')
-        .eq('user_id', user.id)
-      
-      if (simpleError) {
-        return fail(`Database error: ${simpleError.message}`, 500)
+      console.error("[wishlist/GET] Database error:", error.message)
+      return NextResponse.json({ items: [] }, { status: 200 })
+    }
+
+    return NextResponse.json({ items: data ?? [] })
+  } catch (err) {
+    console.error("[wishlist/GET] Unexpected error:", err)
+    return NextResponse.json({ items: [] }, { status: 200 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await getSupabaseServerClient()
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { product_id } = body
+
+    if (!product_id) {
+      return NextResponse.json({ error: "product_id is required" }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from("wishlist_items")
+      .insert({ user_id: user.id, product_id })
+      .select()
+      .single()
+
+    if (error) {
+      // Unique constraint = already wishlisted, treat as success
+      if (error.code === "23505") {
+        return NextResponse.json({ already_exists: true })
       }
-      return ok(simpleData)
+      console.error("[wishlist/POST] Insert error:", error.message)
+      return NextResponse.json({ error: "Failed to add to wishlist" }, { status: 500 })
     }
 
-    return ok(data)
+    return NextResponse.json({ item: data }, { status: 201 })
   } catch (err) {
-    console.error('[wishlist/GET] Unexpected error:', err)
-    return fail('An unexpected error occurred', 500)
+    console.error("[wishlist/POST] Unexpected error:", err)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function POST(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
-    const { user, supabase } = await getAuthUser()
-    if (!user) return fail('Unauthorized', 401)
+    const supabase = await getSupabaseServerClient()
 
-    const { data: body, error: bodyErr } = await parseBody(request, schema)
-    if (bodyErr) return bodyErr
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    const { data: product } = await supabase
-      .from('products')
-      .select('id')
-      .eq('id', body.product_id)
-      .maybeSingle()
-
-    if (!product) return fail('Product not found', 404)
-
-    const { data, error } = await supabase
-      .from('wishlist_items')
-      .upsert(
-        { user_id: user.id, product_id: body.product_id },
-        { onConflict: 'user_id,product_id', ignoreDuplicates: true }
-      )
-      .select('*, product:products(*)')
-      .maybeSingle()
-
-    if (error) {
-      console.error('[wishlist/POST] Database error:', error.message)
-      return fail(`Failed to add to wishlist: ${error.message}`, 500)
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    return ok(data ?? { message: 'Already in wishlist' }, 201)
-  } catch (err) {
-    console.error('[wishlist/POST] Unexpected error:', err)
-    return fail('An unexpected error occurred', 500)
-  }
-}
+    const { searchParams } = new URL(request.url)
+    const productId = searchParams.get("product_id")
 
-export async function DELETE(request: Request) {
-  try {
-    const { user, supabase } = await getAuthUser()
-    if (!user) return fail('Unauthorized', 401)
-
-    const { data: body, error: bodyErr } = await parseBody(request, schema)
-    if (bodyErr) return bodyErr
+    if (!productId) {
+      return NextResponse.json({ error: "product_id is required" }, { status: 400 })
+    }
 
     const { error } = await supabase
-      .from('wishlist_items')
+      .from("wishlist_items")
       .delete()
-      .eq('user_id', user.id)
-      .eq('product_id', body.product_id)
+      .eq("user_id", user.id)
+      .eq("product_id", productId)
 
     if (error) {
-      console.error('[wishlist/DELETE] Database error:', error.message)
-      return fail(`Failed to remove from wishlist: ${error.message}`, 500)
+      console.error("[wishlist/DELETE] Error:", error.message)
+      return NextResponse.json({ error: "Failed to remove from wishlist" }, { status: 500 })
     }
 
-    return ok({ removed: true })
+    return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('[wishlist/DELETE] Unexpected error:', err)
-    return fail('An unexpected error occurred', 500)
+    console.error("[wishlist/DELETE] Unexpected error:", err)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
