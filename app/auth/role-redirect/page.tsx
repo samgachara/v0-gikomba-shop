@@ -20,11 +20,11 @@ export default async function RoleRedirectPage() {
     .single()
 
   if (profile?.role === 'admin') {
-    redirect('/admin')
+    redirect('/dashboard/admin')
   }
 
   if (profile?.role === 'seller') {
-    redirect('/seller/dashboard')
+    redirect('/dashboard/seller')
   }
 
   // Buyers and anyone else go home
