@@ -12,31 +12,36 @@ import { AlertCircle, Loader2, ShoppingBag, MailCheck } from 'lucide-react'
 import { loginSchema, normalizeAuthError } from '@/lib/validators/auth'
 import { FcGoogle } from 'react-icons/fc'
 
+// Maps profile role → correct dashboard URL
+function dashboardPathForRole(role: string | null | undefined): string {
+  if (role === 'admin')  return '/admin'
+  if (role === 'seller') return '/seller/dashboard'
+  return '/'
+}
+
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [loading, setLoading] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false)
-  const [needsVerification, setNeedsVerification] = useState(false)
+  const [email,            setEmail]            = useState('')
+  const [password,         setPassword]         = useState('')
+  const [error,            setError]            = useState<string | null>(null)
+  const [fieldErrors,      setFieldErrors]      = useState<Record<string, string>>({})
+  const [loading,          setLoading]          = useState(false)
+  const [googleLoading,    setGoogleLoading]    = useState(false)
+  const [needsVerification,setNeedsVerification]= useState(false)
   const router = useRouter()
 
+  // After email login: fetch profile role and redirect to correct dashboard
   const redirectByRole = async (supabase: ReturnType<typeof createClient>) => {
     const { data: { user: me } } = await supabase.auth.getUser()
     if (!me) { router.push('/'); return }
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', me.id)
       .single()
-    if (profile?.role === 'admin') {
-      router.push('/dashboard/admin')
-    } else if (profile?.role === 'seller') {
-      router.push('/dashboard/seller')
-    } else {
-      router.push('/')
-    }
+
+    const path = dashboardPathForRole(profile?.role)
+    router.push(path)
     router.refresh()
   }
 
@@ -83,9 +88,15 @@ export default function LoginPage() {
     setGoogleLoading(true)
     setError(null)
     const supabase = createClient()
+
+    // For Google OAuth we can't check role before redirect,
+    // so we send to /auth/callback which redirects to /auth/role-redirect
+    // That page checks the role server-side and sends to the right dashboard.
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/auth/role-redirect`,
+      },
     })
     if (authError) { setError(authError.message); setGoogleLoading(false) }
   }
