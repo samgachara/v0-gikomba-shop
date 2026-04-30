@@ -1,32 +1,25 @@
 import type { Product } from '@/lib/types'
 
+// These values MUST match exactly what is stored in the `products.category` column in the DB
 export const SHOP_CATEGORY_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: 'men', label: "Men's Fashion" },
-  { value: 'women', label: "Women's Fashion" },
-  { value: 'kids', label: 'Kids' },
-  { value: 'accessories', label: 'Bags & Accessories' },
-  { value: 'electronics', label: 'Electronics' },
-  { value: 'home', label: 'Home & Living' },
+  { value: 'all',           label: 'All' },
+  { value: 'Clothing',      label: 'Clothing' },
+  { value: 'Shoes',         label: 'Shoes' },
+  { value: 'Accessories',   label: 'Accessories' },
+  { value: 'Electronics',   label: 'Electronics' },
+  { value: 'Home & Living', label: 'Home & Living' },
+  { value: 'Sports',        label: 'Sports' },
+  { value: 'Beauty',        label: 'Beauty' },
+  { value: 'Books',         label: 'Books' },
+  { value: 'Other',         label: 'Other' },
 ]
 
 export const SHOP_SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest' },
-  { value: 'price_asc', label: 'Price: Low' },
+  { value: 'newest',     label: 'Newest' },
+  { value: 'price_asc',  label: 'Price: Low' },
   { value: 'price_desc', label: 'Price: High' },
-  { value: 'popular', label: 'Top Rated' },
+  { value: 'popular',    label: 'Top Rated' },
 ]
-
-const CATEGORY_ALIASES: Record<string, string> = {
-  All: 'all',
-  "Men's Fashion": 'men',
-  "Women's Fashion": 'women',
-  Kids: 'kids',
-  Shoes: 'accessories',
-  'Bags & Accessories': 'accessories',
-  Electronics: 'electronics',
-  'Home & Living': 'home',
-}
 
 const VALID_CATEGORIES = new Set(SHOP_CATEGORY_OPTIONS.map((option) => option.value))
 const VALID_FILTERS = new Set(['new', 'bestsellers', 'sale'])
@@ -63,14 +56,18 @@ function sanitizeSearchInput(input: string) {
     .trim()
     .slice(0, 100)
     .replace(/[%_\\]/g, (char) => `\\${char}`)
-    .replace(/['";`]/g, '')
+    .replace(/['";\`]/g, '')
 }
 
 function normalizeCategory(category?: string | null) {
   if (!category) return 'all'
-
-  const aliasedCategory = CATEGORY_ALIASES[category] ?? category
-  return VALID_CATEGORIES.has(aliasedCategory) ? aliasedCategory : 'all'
+  // Accept exact DB value or lowercase match
+  if (VALID_CATEGORIES.has(category)) return category
+  // Try case-insensitive match
+  const match = SHOP_CATEGORY_OPTIONS.find(
+    (o) => o.value.toLowerCase() === category.toLowerCase()
+  )
+  return match ? match.value : 'all'
 }
 
 function normalizeFilter(filter?: string | null): ShopQueryState['filter'] {
@@ -92,14 +89,7 @@ export function normalizeShopQuery(input: ShopQueryInput): ShopQueryState {
     sort = 'popular'
   }
 
-  return {
-    category,
-    filter,
-    search,
-    sort,
-    page,
-    limit,
-  }
+  return { category, filter, search, sort, page, limit }
 }
 
 export async function fetchShopProducts(
@@ -115,12 +105,15 @@ export async function fetchShopProducts(
     .range(offset, offset + queryState.limit - 1)
     .or('is_active.is.null,is_active.eq.true')
 
+  // Category filter: use exact DB value, skip if 'all'
   if (queryState.category !== 'all') {
     query = query.eq('category', queryState.category)
   }
 
   if (queryState.search) {
-    query = query.or(`name.ilike.%${queryState.search}%,description.ilike.%${queryState.search}%`)
+    query = query.or(
+      `name.ilike.%${queryState.search}%,title.ilike.%${queryState.search}%,description.ilike.%${queryState.search}%`
+    )
   }
 
   if (queryState.filter === 'new') {
@@ -144,9 +137,7 @@ export async function fetchShopProducts(
 
   const { data, error, count } = await query
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
   return {
     products: (data ?? []) as Product[],
