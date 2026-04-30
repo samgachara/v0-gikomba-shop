@@ -46,9 +46,8 @@ export async function updateSession(request: NextRequest) {
     role = profile?.role ?? null
   }
 
-  // ── Admin dashboard: locked to your email only ─────────────────────────────
-  // Pages live at /dashboard/admin — NOT /admin
-  if (pathname.startsWith('/dashboard/admin')) {
+  // ── Admin: locked to your email only ──────────────────────────────────────
+  if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard/admin')) {
     if (!user || user.email !== 'samgachara5@gmail.com') {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
@@ -56,9 +55,8 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // ── Seller dashboard: must be logged in with role = 'seller' or 'admin' ────
-  // Pages live at /dashboard/seller — NOT /seller
-  if (pathname.startsWith('/dashboard/seller')) {
+  // ── Seller: must be logged in with role = 'seller' or 'admin' ─────────────
+  if (pathname.startsWith('/seller') || pathname.startsWith('/dashboard/seller')) {
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
@@ -71,30 +69,7 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // ── Legacy /admin and /seller pages redirect to dashboard equivalents ───────
-  // These pages themselves do the redirect via useRouter, but guard them too
-  if (pathname.startsWith('/admin')) {
-    if (!user || user.email !== 'samgachara5@gmail.com') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
-      return NextResponse.redirect(url)
-    }
-  }
-
-  if (pathname === '/seller' || pathname.startsWith('/seller/')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
-      return NextResponse.redirect(url)
-    }
-    if (role !== 'seller' && role !== 'admin') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
-    }
-  }
-
-  // ── Post-login redirect: send users to their dashboard automatically ────────
+  // ── Post-login redirect: send users to their dashboard automatically ───────
   if (pathname === '/auth/login' && user) {
     const url = request.nextUrl.clone()
     if (user.email === 'samgachara5@gmail.com') {
