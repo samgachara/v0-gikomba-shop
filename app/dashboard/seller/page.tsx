@@ -147,8 +147,8 @@ export default function SellerDashboardPage() {
     ])
     if (profileRes.ok)  setProfile(await profileRes.json())
     if (statsRes.ok)    setStats(await statsRes.json())
-    if (productsRes.ok) setProducts(await productsRes.json())
-    if (ordersRes.ok)   setOrders(await ordersRes.json())
+    if (productsRes.ok) { const d = await productsRes.json(); setProducts(Array.isArray(d) ? d : d.products ?? []) }
+    if (ordersRes.ok) { const d = await ordersRes.json(); setOrders(Array.isArray(d) ? d : d.orders ?? []) }
     if (payoutsRes.ok) {
       const d = await payoutsRes.json()
       setPayouts(Array.isArray(d) ? d : d.payouts ?? [])
@@ -177,7 +177,7 @@ export default function SellerDashboardPage() {
     })
     const data = await res.json()
     if (!res.ok) { setFormError(data.error ?? 'Failed to add product'); setSubmitting(false); return }
-    setProducts(prev => [data, ...prev])
+    setProducts(prev => [data?.product ?? data, ...prev])
     setStats(prev => prev ? { ...prev, productCount: prev.productCount + 1 } : prev)
     setForm(EMPTY_FORM); setFormOk(true); setSubmitting(false)
     setTimeout(() => { setFormOk(false); setShowForm(false) }, 1500)
