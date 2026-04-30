@@ -1,35 +1,36 @@
 import Link from "next/link"
 import Image from "next/image"
 
+// href values MUST match the `category` column values in the `products` table exactly
 const categories = [
   {
-    name: "Women's Fashion",
-    href: "/shop?category=women",
+    name: "Clothing",
+    href: "/shop?category=Clothing",
     image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=533&fit=crop"
   },
   {
-    name: "Men's Fashion",
-    href: "/shop?category=men",
+    name: "Shoes",
+    href: "/shop?category=Shoes",
     image: "https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=400&h=533&fit=crop"
   },
   {
     name: "Electronics",
-    href: "/shop?category=electronics",
+    href: "/shop?category=Electronics",
     image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=533&fit=crop"
   },
   {
     name: "Home & Living",
-    href: "/shop?category=home",
+    href: "/shop?category=Home+%26+Living",
     image: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=400&h=533&fit=crop"
   },
   {
-    name: "Kids & Baby",
-    href: "/shop?category=kids",
+    name: "Sports",
+    href: "/shop?category=Sports",
     image: "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=400&h=533&fit=crop"
   },
   {
     name: "Accessories",
-    href: "/shop?category=accessories",
+    href: "/shop?category=Accessories",
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=533&fit=crop"
   },
 ]
@@ -72,7 +73,7 @@ export function Categories() {
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-4">
                 <h3 className="text-sm font-semibold text-card sm:text-base">{category.name}</h3>
-                              </div>
+              </div>
             </Link>
           ))}
         </div>
