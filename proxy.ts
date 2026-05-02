@@ -2,8 +2,8 @@ import { updateSession } from '@/lib/supabase/middleware'
 import type { NextRequest } from 'next/server'
 
 // Next.js 16: proxy.ts replaces middleware.ts
-// This runs on every request to refresh the Supabase auth session cookie.
-export async function proxy(request: NextRequest) {
+// Must be a default export. Function name is arbitrary.
+export default async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
 
