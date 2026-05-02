@@ -45,6 +45,8 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  // Redirect to the intended destination or home
-  return NextResponse.redirect(new URL(next, requestUrl.origin))
+  // Send to role-redirect so admins/sellers land on the correct dashboard
+  // If a specific next= param was provided (e.g. from a protected page), honour it
+  const destination = next === "/" ? "/auth/role-redirect" : next
+  return NextResponse.redirect(new URL(destination, requestUrl.origin))
 }
