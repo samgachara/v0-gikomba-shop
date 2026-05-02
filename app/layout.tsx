@@ -1,21 +1,10 @@
 import type { Metadata } from 'next'
-import { DM_Sans, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/lib/auth-context'
 import { CartProvider } from '@/lib/cart-context'
 import { Toaster } from '@/components/ui/sonner'
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-sans',
-})
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-display',
-})
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -25,22 +14,13 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
-  alternates: {
-    canonical: '/',
-  },
+  alternates: { canonical: '/' },
   openGraph: {
     title: 'Gikomba Shop - Affordable Fashion for Kenya',
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     siteName: SITE_NAME,
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Gikomba Shop - Kenya\'s trusted online marketplace',
-      },
-    ],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: "Gikomba Shop - Kenya's trusted online marketplace" }],
     locale: 'en_KE',
     type: 'website',
   },
@@ -53,7 +33,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
+      { url: '/icon-dark-32x32.png',  media: '(prefers-color-scheme: dark)'  },
       { url: '/icon.svg', type: 'image/svg+xml' },
     ],
     apple: '/apple-icon.png',
@@ -68,48 +48,28 @@ const siteSchema = {
       name: SITE_NAME,
       url: SITE_URL,
       logo: `${SITE_URL}/apple-icon.png`,
-      contactPoint: [
-        {
-          '@type': 'ContactPoint',
-          telephone: '+254736906440',
-          contactType: 'customer support',
-          areaServed: 'KE',
-          availableLanguage: ['en'],
-        },
-      ],
-      sameAs: [
-        'https://www.facebook.com/gikombashop',
-        'https://www.instagram.com/gikombashop',
-        'https://twitter.com/gikombashop',
-      ],
+      contactPoint: [{ '@type': 'ContactPoint', telephone: '+254736906440', contactType: 'customer support', areaServed: 'KE', availableLanguage: ['en'] }],
+      sameAs: ['https://www.facebook.com/gikombashop', 'https://www.instagram.com/gikombashop', 'https://twitter.com/gikombashop'],
     },
     {
       '@type': 'WebSite',
       name: SITE_NAME,
       url: SITE_URL,
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: `${SITE_URL}/shop?search={search_term_string}`,
-        'query-input': 'required name=search_term_string',
-      },
+      potentialAction: { '@type': 'SearchAction', target: `${SITE_URL}/shop?search={search_term_string}`, 'query-input': 'required name=search_term_string' },
     },
   ],
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body
-        className={`${dmSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}
-      >
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }}
-        />
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      </head>
+      <body className="font-sans antialiased">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }} />
         <AuthProvider>
           <CartProvider>
             {children}
