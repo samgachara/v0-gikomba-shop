@@ -125,7 +125,7 @@ export async function fetchShopProducts(
     .from('products')
     .select('*', { count: 'exact' })
     .range(offset, offset + queryState.limit - 1)
-    .eq('is_active', true)
+    .or('is_active.is.null,is_active.eq.true')
 
   if (queryState.category !== 'all') {
     query = query.eq('category', queryState.category)
