@@ -78,6 +78,96 @@ Verified sellers. Quality grades. M-Pesa payments. Buyer protection. Real review
 That's gikomba.shop. We're still early. But we're building something real.
     `,
   },
+  'buyer-protection-guide': {
+    title: 'How Buyer Protection Works on gikomba.shop',
+    date: 'April 5, 2026',
+    category: 'Trust & Safety',
+    content: `
+## What Is Buyer Protection?
+
+Every order on gikomba.shop is covered by our Buyer Protection policy. This means if something goes wrong — the item doesn't arrive, it's significantly different from the description, or it's damaged — we've got you.
+
+## 7-Day Returns
+
+Not happy with what you received? You have 7 days from delivery to request a return. We'll help coordinate the return and ensure your money comes back to you via M-Pesa or card, whichever you used to pay.
+
+## Verified Sellers
+
+We manually verify every seller on the platform. They go through an ID check and agree to our seller standards before listing a single product. If a seller breaks our rules, they're removed — and affected buyers are refunded.
+
+## How We Keep Your Money Safe
+
+Payments go through our platform — not directly to the seller. Funds are only released to the seller after you confirm receipt or after the 7-day protection window closes without a dispute. This is sometimes called an escrow-style model.
+
+## How to Raise a Dispute
+
+Go to your Orders page, find the order, and tap "Report a Problem." Describe the issue and attach photos if possible. Our team responds within 24 hours on business days.
+    `,
+  },
+  'product-grading-explained': {
+    title: 'What Grade A, B and C Actually Means When You Shop Here',
+    date: 'April 10, 2026',
+    category: 'Buyer Guide',
+    content: `
+## Why We Use a Grading System
+
+Most second-hand and thrift platforms let sellers describe their own condition in vague terms like "good condition" or "slightly used." That's not good enough. We use a standardised grading system so you always know exactly what you're getting.
+
+## Grade A — Like New
+
+Grade A items are in near-perfect condition. They may have been used once or twice but show no visible wear. Think of it as the item you'd find at a boutique pre-loved shop — not a scratch, no pilling, no fading.
+
+**Expect:** No visible defects. Original packaging may or may not be included.
+
+## Grade B — Good Condition
+
+Grade B items show light signs of use — minor pilling on fabric, light surface scuffs on shoes, or small marks that don't affect the item's function or overall look. These are the items that offer the best value: real quality at a fraction of the new price.
+
+**Expect:** Light wear consistent with normal use. Fully functional.
+
+## Grade C — Visible Wear
+
+Grade C items are priced low for a reason. They work, but they show it — noticeable fading, scuffs, or wear that's cosmetically visible. Great for someone who needs a functional item on a tight budget or who plans to upcycle.
+
+**Expect:** Visible wear. Always functional unless stated otherwise.
+
+## Our Promise
+
+Sellers who misgrade their items lose their verified status. If you receive an item that doesn't match its grade, report it — you're covered by our Buyer Protection policy.
+    `,
+  },
+  'how-to-shop-safely-online-kenya': {
+    title: 'How to Shop Safely Online in Kenya in 2026',
+    date: 'April 18, 2026',
+    category: 'Buyer Guide',
+    content: `
+## The Online Shopping Landscape in Kenya
+
+Kenya's e-commerce scene has grown fast — and so have the scams. From fake M-Pesa payment confirmations to sellers who vanish after payment, Kenyan online shoppers face real risks. Here's how to protect yourself.
+
+## Red Flags to Watch For
+
+Never pay outside a platform. If a seller asks you to send money directly to their M-Pesa number before you receive a product, that's a scam. Legitimate platforms hold payments until delivery is confirmed.
+
+Watch for prices that are too good to be true. A brand-new iPhone for KSh 5,000 is not a deal — it's bait.
+
+Check seller reviews. A seller with 50+ reviews and a 4+ star rating is almost always trustworthy. A seller with zero reviews asking for full payment upfront is not.
+
+## How to Use M-Pesa Safely
+
+Only send M-Pesa payments to numbers or till numbers provided by the platform — not the individual seller. Always screenshot your confirmation message. Never share your M-Pesa PIN with anyone.
+
+## Questions to Ask Before Buying
+
+Can I see more photos? A legitimate seller will always share additional images. Can you describe the condition in more detail? Is delivery tracked? How do I return if the item is not as described?
+
+## Why gikomba.shop Is Different
+
+We built Buyer Protection in from day one. Payments are held until you confirm receipt. Sellers are verified with ID. Every listing must include a quality grade. If something goes wrong, we step in — not just point you back to the seller.
+
+Shop with confidence. That's the whole point.
+    `,
+  },
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
