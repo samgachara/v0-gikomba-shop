@@ -41,7 +41,7 @@ export const orderSchema = z.object({
   shipping_address: z.string().min(5, 'Address is required').max(500),
   shipping_city: z.string().min(2, 'City is required').max(100),
   phone: phoneSchema,
-  payment_method: z.enum(['mpesa', 'card'], {
+  payment_method: z.enum(['mpesa', 'card', 'pod'], {
     errorMap: () => ({ message: 'Invalid payment method' }),
   }),
 })
