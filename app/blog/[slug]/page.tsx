@@ -35,14 +35,14 @@ Sellers who respond to WhatsApp enquiries within the hour close 3x more sales th
 
 M-Pesa is the most popular payment method on gikomba.shop — and for good reason. It's instant, familiar, and doesn't require a bank account. The STK push means you just enter your PIN and the payment is done.
 
-**Pros:** Instant, widely trusted, no card needed, works on any phone.  
+**Pros:** Instant, widely trusted, no card needed, works on any phone.
 **Cons:** Requires good network, transaction limits apply.
 
 ## Card Payments: For the Banked
 
 Visa and Mastercard work well for larger purchases or for buyers who prefer keeping purchases off their M-Pesa statement.
 
-**Pros:** Higher limits, works internationally, full purchase history.  
+**Pros:** Higher limits, works internationally, full purchase history.
 **Cons:** Requires a bank account, slightly more steps.
 
 ## Pay on Delivery: For First-Time Buyers
@@ -71,7 +71,7 @@ We asked: what if Gikomba had trust infrastructure?
 
 ## Building gikomba.shop
 
-In 2025, Samwel Gachara and Isaac Mwathi started building. The goal was simple: take the spirit of Gikomba — great value, local sellers, real products — and add the trust layer that the physical market lacks.
+In 2025, we started building. The goal was simple: take the spirit of Gikomba — great value, local sellers, real products — and add the trust layer that the physical market lacks.
 
 Verified sellers. Quality grades. M-Pesa payments. Buyer protection. Real reviews from real buyers.
 
@@ -97,7 +97,7 @@ We manually verify every seller on the platform. They go through an ID check and
 
 ## How We Keep Your Money Safe
 
-Payments go through our platform — not directly to the seller. Funds are only released to the seller after you confirm receipt or after the 7-day protection window closes without a dispute. This is sometimes called an escrow-style model.
+Payments go through our platform — not directly to the seller. Funds are only released to the seller after you confirm receipt or after the 7-day protection window closes without a dispute.
 
 ## How to Raise a Dispute
 
@@ -111,23 +111,23 @@ Go to your Orders page, find the order, and tap "Report a Problem." Describe the
     content: `
 ## Why We Use a Grading System
 
-Most second-hand and thrift platforms let sellers describe their own condition in vague terms like "good condition" or "slightly used." That's not good enough. We use a standardised grading system so you always know exactly what you're getting.
+Most second-hand platforms let sellers describe condition in vague terms like "good condition." That's not good enough. We use a standardised grading system so you always know exactly what you're getting.
 
 ## Grade A — Like New
 
-Grade A items are in near-perfect condition. They may have been used once or twice but show no visible wear. Think of it as the item you'd find at a boutique pre-loved shop — not a scratch, no pilling, no fading.
+Grade A items are in near-perfect condition. They may have been used once or twice but show no visible wear.
 
 **Expect:** No visible defects. Original packaging may or may not be included.
 
 ## Grade B — Good Condition
 
-Grade B items show light signs of use — minor pilling on fabric, light surface scuffs on shoes, or small marks that don't affect the item's function or overall look. These are the items that offer the best value: real quality at a fraction of the new price.
+Grade B items show light signs of use — minor pilling on fabric, light surface scuffs on shoes, or small marks that don't affect the item's function.
 
 **Expect:** Light wear consistent with normal use. Fully functional.
 
 ## Grade C — Visible Wear
 
-Grade C items are priced low for a reason. They work, but they show it — noticeable fading, scuffs, or wear that's cosmetically visible. Great for someone who needs a functional item on a tight budget or who plans to upcycle.
+Grade C items are priced low for a reason. They work, but they show it — noticeable fading, scuffs, or wear that's cosmetically visible.
 
 **Expect:** Visible wear. Always functional unless stated otherwise.
 
@@ -143,7 +143,7 @@ Sellers who misgrade their items lose their verified status. If you receive an i
     content: `
 ## The Online Shopping Landscape in Kenya
 
-Kenya's e-commerce scene has grown fast — and so have the scams. From fake M-Pesa payment confirmations to sellers who vanish after payment, Kenyan online shoppers face real risks. Here's how to protect yourself.
+Kenya's e-commerce scene has grown fast — and so have the scams. From fake M-Pesa confirmations to sellers who vanish after payment, Kenyan online shoppers face real risks.
 
 ## Red Flags to Watch For
 
@@ -151,7 +151,7 @@ Never pay outside a platform. If a seller asks you to send money directly to the
 
 Watch for prices that are too good to be true. A brand-new iPhone for KSh 5,000 is not a deal — it's bait.
 
-Check seller reviews. A seller with 50+ reviews and a 4+ star rating is almost always trustworthy. A seller with zero reviews asking for full payment upfront is not.
+Check seller reviews. A seller with 50+ reviews and a 4+ star rating is almost always trustworthy.
 
 ## How to Use M-Pesa Safely
 
@@ -159,19 +159,20 @@ Only send M-Pesa payments to numbers or till numbers provided by the platform �
 
 ## Questions to Ask Before Buying
 
-Can I see more photos? A legitimate seller will always share additional images. Can you describe the condition in more detail? Is delivery tracked? How do I return if the item is not as described?
+Can I see more photos? Can you describe the condition in more detail? Is delivery tracked? How do I return if the item is not as described?
 
 ## Why gikomba.shop Is Different
 
-We built Buyer Protection in from day one. Payments are held until you confirm receipt. Sellers are verified with ID. Every listing must include a quality grade. If something goes wrong, we step in — not just point you back to the seller.
-
-Shop with confidence. That's the whole point.
+We built Buyer Protection in from day one. Payments are held until you confirm receipt. Sellers are verified with ID. Every listing must include a quality grade. If something goes wrong, we step in.
     `,
   },
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = posts[params.slug]
+type Props = { params: Promise<{ slug: string }> }
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const post = posts[slug]
   if (!post) return { title: 'Post Not Found' }
   return {
     title: `${post.title} | gikomba.shop Blog`,
@@ -179,11 +180,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = posts[params.slug]
+export default async function BlogPostPage({ params }: Props) {
+  const { slug } = await params
+  const post = posts[slug]
   if (!post) notFound()
 
-  // Simple markdown-like rendering
   const paragraphs = post.content.trim().split('\n\n')
 
   return (
@@ -202,7 +203,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           <div className="prose prose-gray max-w-none space-y-4">
             {paragraphs.map((p, i) => {
               if (p.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold mt-8 mb-3">{p.replace('## ', '')}</h2>
-              if (p.startsWith('**')) return <p key={i} className="text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: p.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+              if (p.includes('**')) return <p key={i} className="text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: p.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
               return <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>
             })}
           </div>
