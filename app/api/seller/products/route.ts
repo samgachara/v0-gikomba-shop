@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       image_url:      image_url ?? null,
       images:         images ?? [],
       tags:           tags ?? [],
-      is_active:      true,
+      is_active:      false, // pending admin approval
       is_new:         true,
     })
     .select()

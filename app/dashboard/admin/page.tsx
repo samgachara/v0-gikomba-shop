@@ -180,12 +180,15 @@ export default function AdminDashboardPage() {
   )
 
   // ── Derived ────────────────────────────────────────────────────────────────────
+  const pendingProducts = products.filter(p => !p.is_active)
   const pendingSellers = sellers.filter(s => s.status === 'pending' || (!s.verified && s.status === 'active'))
   const pendingPayouts = payouts.filter(p => p.status === 'pending')
   const pendingOrders  = orders.filter(o => o.status === 'pending')
 
   const filteredOrders   = orders.filter(o => !orderFilter   || o.status === orderFilter)
-  const filteredProducts = products.filter(p => !productFilter || p.category === productFilter || (productFilter === 'inactive' && !p.is_active) || (productFilter === 'featured' && p.is_featured))
+  const filteredProducts = products
+    .filter(p => !productFilter || p.category === productFilter || (productFilter === 'inactive' && !p.is_active) || (productFilter === 'featured' && p.is_featured))
+    .sort((a, b) => (a.is_active === b.is_active ? 0 : a.is_active ? 1 : -1)) // pending (inactive) first
   const filteredUsers    = users.filter(u => !userSearch || `${u.first_name} ${u.last_name}`.toLowerCase().includes(userSearch.toLowerCase()))
 
   const kpis = [
@@ -221,6 +224,7 @@ export default function AdminDashboardPage() {
                 {t}
                 {t === 'orders'  && (stats?.pendingOrders ?? 0) > 0   && <span className="ml-1.5 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">{stats!.pendingOrders}</span>}
                 {t === 'sellers' && pendingSellers.length > 0          && <span className="ml-1.5 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">{pendingSellers.length}</span>}
+                {t === 'products' && pendingProducts.length > 0          && <span className="ml-1.5 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">{pendingProducts.length}</span>}
                 {t === 'payouts' && pendingPayouts.length > 0          && <span className="ml-1.5 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">{pendingPayouts.length}</span>}
                 {t === 'support' && tickets.length > 0                 && <span className="ml-1.5 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{tickets.length}</span>}
               </button>
@@ -372,14 +376,14 @@ export default function AdminDashboardPage() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-medium text-sm">{product.name}</p>
                             {product.is_featured && <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 rounded">★ Featured</span>}
-                            {!product.is_active  && <span className="text-xs bg-red-100 text-red-700 px-1.5 rounded">Inactive</span>}
+                            {!product.is_active  && <span className="text-xs bg-orange-100 text-orange-700 px-1.5 rounded font-medium">⏳ Pending Approval</span>}
                             {product.is_new      && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 rounded">New</span>}
                           </div>
                           <p className="text-xs text-muted-foreground">{product.seller?.store_name} · {product.category} · {product.stock} stock · {product.num_reviews ?? 0} reviews</p>
                           <p className="text-sm font-semibold mt-0.5">{fmt(product.price)}</p>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0 flex-wrap justify-end">
-                          <Button size="sm" variant="ghost" className="text-xs h-8 gap-1" title={product.is_active ? 'Deactivate' : 'Activate'} disabled={actionId===product.id} onClick={() => productAction(product.id, { is_active: !product.is_active })}>
+                          <Button size="sm" variant="ghost" className="text-xs h-8 gap-1" title={product.is_active ? 'Deactivate' : 'Approve & Publish'} disabled={actionId===product.id} onClick={() => productAction(product.id, { is_active: !product.is_active })}>
                             {actionId===product.id ? <Loader2 className="h-3.5 w-3.5 animate-spin"/> : product.is_active ? <ToggleRight className="h-4 w-4 text-green-600"/> : <ToggleLeft className="h-4 w-4 text-gray-400"/>}
                           </Button>
                           <Button size="sm" variant="ghost" className="text-xs h-8 gap-1" title={product.is_featured ? 'Unfeature' : 'Feature'} disabled={actionId===product.id} onClick={() => productAction(product.id, { is_featured: !product.is_featured })}>
