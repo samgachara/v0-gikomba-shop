@@ -1,51 +1,66 @@
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import Link from 'next/link'
-export const metadata = {
-  title: 'Careers at gikomba.shop — Join Our Team',
-  description: "Join the team building Kenya's trusted online marketplace. We're a small, passionate team working hard to empower Kenyan traders and shoppers.",
-}
+
+export const metadata = { title: 'Careers – gikomba.shop', description: 'Join the team building Kenya\'s most trusted online marketplace.' }
+
 export default function CareersPage() {
   return (
     <>
       <Header />
       <main className="min-h-screen bg-background py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl font-bold mb-4">Join Our Team</h1>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Help us build Kenya&apos;s most beloved marketplace. We&apos;re a small, passionate team working hard to empower Kenyan traders and shoppers.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6 mb-16 text-center">
-            {[['🇰🇪','Kenya First','We build for Kenyan realities, not Silicon Valley'],['🚀','Move Fast','Ship real value for real people every week'],['🤝','Team Spirit','Small team, big mission, genuine camaraderie']].map(([e,t,d]) => (
-              <div key={t} className="p-6 border border-border rounded-xl">
-                <div className="text-4xl mb-3">{e}</div>
-                <p className="font-semibold mb-2">{t}</p>
-                <p className="text-sm text-muted-foreground">{d}</p>
-              </div>
-            ))}
-          </div>
+        <div className="max-w-3xl mx-auto">
           <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6 text-center">Roles We Typically Hire For</h2>
-            <div className="grid md:grid-cols-2 gap-4">
+            <h1 className="text-4xl font-bold mb-3">Careers at gikomba.shop</h1>
+            <p className="text-muted-foreground text-lg">We're building Kenya's most trusted marketplace. If that excites you, we'd love to hear from you.</p>
+          </div>
+
+          {/* Values */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-6">How We Work</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
               {[
-                { title: 'Software Engineers', desc: 'Frontend (Next.js/React) and backend (Node.js, PostgreSQL). We build in public and ship fast.' },
-                { title: 'Customer Support', desc: 'WhatsApp-first support. Empathetic, fast, and solutions-focused. Nairobi-based preferred.' },
-                { title: 'Seller Partnerships', desc: 'Onboarding and growing our seller community across Kenya. Relationships and hustle required.' },
-                { title: 'Digital Marketing', desc: 'TikTok, Instagram, WhatsApp commerce. We want creators who understand the Kenyan market.' },
+                { title: 'Kenya-first', desc: 'Everything we build is designed for the Kenyan market. We understand local payments, local logistics, and local buyer behaviour.' },
+                { title: 'Ownership', desc: 'Small team, big responsibility. Every person owns their domain and makes real decisions that affect real users.' },
+                { title: 'Trust-obsessed', desc: 'We believe the biggest problem in African e-commerce is trust. Everything we build is designed to solve that.' },
+                { title: 'Remote-friendly', desc: 'We work from Nairobi but we\'re open to remote talent across East Africa for the right roles.' },
               ].map(({ title, desc }) => (
-                <div key={title} className="p-5 border border-border rounded-xl">
-                  <p className="font-semibold mb-1">{title}</p>
+                <div key={title} className="p-6 bg-muted rounded-xl">
+                  <h3 className="font-semibold mb-2">{title}</h3>
                   <p className="text-sm text-muted-foreground">{desc}</p>
                 </div>
               ))}
             </div>
           </div>
-          <div className="text-center p-12 bg-primary/5 rounded-2xl">
-            <h2 className="text-2xl font-bold mb-4">No Open Roles Right Now</h2>
-            <p className="text-muted-foreground mb-6">We&apos;re a small team but always looking for exceptional people. Send us your CV — when we hire, we go to our waitlist first.</p>
-            <Link href="/contact" className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-              Send Your CV
-            </Link>
+
+          {/* Open roles */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-6">Open Roles</h2>
+            <div className="space-y-4">
+              {[
+                { title: 'Seller Acquisition Lead', type: 'Part-time / Commission', location: 'Nairobi', desc: 'Find and onboard quality sellers onto gikomba.shop. You\'ll be the face of the platform to vendors in Gikomba, Kamukunji, and Eastleigh. Commission-based with performance bonuses.' },
+                { title: 'Customer Support Associate', type: 'Part-time', location: 'Remote (Kenya)', desc: 'Handle buyer and seller queries via WhatsApp, email, and phone. Monday–Saturday. Strong communication skills in English and Swahili required.' },
+                { title: 'Delivery Partner', type: 'Contract', location: 'Nairobi', desc: 'Own a motorbike and want reliable work? We\'re building a network of trusted delivery riders for same-day Nairobi deliveries. Flexible hours, competitive per-delivery rate.' },
+              ].map(({ title, type, location, desc }) => (
+                <div key={title} className="p-6 border border-border rounded-xl hover:bg-muted/50 transition-colors">
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                    <h3 className="font-semibold text-lg">{title}</h3>
+                    <div className="flex gap-2 flex-wrap">
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{type}</span>
+                      <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{location}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* General applications */}
+          <div className="p-8 bg-muted rounded-2xl text-center">
+            <h2 className="text-xl font-bold mb-2">Don't see your role?</h2>
+            <p className="text-muted-foreground text-sm mb-6">We're always open to meeting great people. Send your CV and a short note about what you'd like to work on.</p>
+            <a href="mailto:careers@gikomba.shop" className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Send an Open Application</a>
           </div>
         </div>
       </main>
