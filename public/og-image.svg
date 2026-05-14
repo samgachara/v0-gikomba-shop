@@ -1,16 +1,9 @@
-<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="1200" height="630" fill="#f0fdf4"/>
-  <!-- Green accent bar -->
-  <rect width="1200" height="8" fill="#16a34a"/>
-  <!-- G mark circle -->
-  <circle cx="160" cy="315" r="90" fill="#16a34a"/>
-  <text x="160" y="355" font-family="Arial, Helvetica, sans-serif" font-size="110" font-weight="700" text-anchor="middle" fill="white">G</text>
-  <!-- Brand name -->
-  <text x="290" y="295" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="700" fill="#171717">gikomba</text>
-  <text x="290" y="370" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="700" fill="#16a34a">.shop</text>
-  <!-- Tagline -->
-  <text x="290" y="435" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#6b7280">Kenya's trusted online marketplace</text>
-  <!-- Bottom accent -->
-  <rect y="622" width="1200" height="8" fill="#16a34a"/>
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <rect width="1200" height="6" fill="#f97316"/>
+  <image href="/logo.png" x="60" y="90" width="420" height="420"/>
+  <text x="560" y="260" font-family="Arial, Helvetica, sans-serif" font-size="80" font-weight="700" fill="#171717">gikomba</text>
+  <text x="560" y="350" font-family="Arial, Helvetica, sans-serif" font-size="80" font-weight="700" fill="#f97316">.shop</text>
+  <text x="562" y="420" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#6b7280" letter-spacing="4">GIKOMBA. ONLINE. DELIVERED.</text>
+  <rect y="624" width="1200" height="6" fill="#f97316"/>
 </svg>
