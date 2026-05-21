@@ -40,9 +40,7 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-              <span className="text-lg font-bold text-primary-foreground">G</span>
-            </div>
+            <img src="/logo-mark.png" alt="gikomba.shop" className="h-10 w-10 object-contain" />
             <span className="text-xl font-bold tracking-tight text-foreground">
               gikomba<span className="text-primary">.shop</span>
             </span>

@@ -108,9 +108,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link href="/" className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-lg font-bold text-primary-foreground">G</span>
-            </div>
+            <img src="/logo-mark.png" alt="gikomba.shop" className="h-10 w-10 object-contain" />
             <span className="text-2xl font-bold text-foreground">gikomba.shop</span>
           </Link>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
