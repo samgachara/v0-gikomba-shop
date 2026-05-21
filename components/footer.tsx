@@ -1,5 +1,4 @@
 // components/footer.tsx
-import Image from "next/image"
 import Link from "next/link"
 
 const footerLinks = {
@@ -36,13 +35,9 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/gikomba-mark.svg"
-                alt="gikomba.shop logo"
-                width={40}
-                height={40}
-                className="h-10 w-10"
-              />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+                <span className="text-lg font-bold text-primary-foreground">G</span>
+              </div>
               <span className="text-xl font-bold">
                 gikomba<span className="text-primary">.shop</span>
               </span>
