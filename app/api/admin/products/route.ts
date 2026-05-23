@@ -75,15 +75,19 @@ export async function PATCH(request: Request) {
         .select('first_name')
         .eq('id', product.seller_id)
         .single()
-      const { data: sellerAuth } = await supabase.auth.admin.getUserById(product.seller_id)
-      if (sellerAuth?.user?.email) {
-        await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('.supabase.co', '.supabase.co') ?? 'https://gikomba.shop'}/api/notify`, {
+      // Get seller email from auth.users via a direct DB query (no service role needed)
+      const { data: sellerEmailRow } = await supabase
+        .rpc('get_user_email', { user_id: product.seller_id })
+        .single()
+      const sellerEmail = (sellerEmailRow as any)?.email
+      if (sellerEmail) {
+        await fetch('https://gikomba.shop/api/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-notify-secret': process.env.NOTIFY_SECRET || 'gikomba-notify-2026' },
           body: JSON.stringify({
             type: 'product_approved',
             data: {
-              seller_email: sellerAuth.user.email,
+              seller_email: sellerEmail,
               seller_name: sellerProfile?.first_name || 'Seller',
               product_name: product.name || product.title,
               product_id,
