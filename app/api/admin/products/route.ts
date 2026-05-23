@@ -58,12 +58,42 @@ export async function PATCH(request: Request) {
   if (is_featured !== undefined) updates.is_featured = is_featured
   if (is_new      !== undefined) updates.is_new      = is_new
 
-  const { error } = await supabase
+  const { data: product, error } = await supabase
     .from('products')
     .update(updates)
     .eq('id', product_id)
+    .select('name, title, seller_id, sellers(id)')
+    .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Fire approval notification to seller
+  if (is_active === true && product) {
+    try {
+      const { data: sellerProfile } = await supabase
+        .from('profiles')
+        .select('first_name')
+        .eq('id', product.seller_id)
+        .single()
+      const { data: sellerAuth } = await supabase.auth.admin.getUserById(product.seller_id)
+      if (sellerAuth?.user?.email) {
+        await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('.supabase.co', '.supabase.co') ?? 'https://gikomba.shop'}/api/notify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-notify-secret': process.env.NOTIFY_SECRET || 'gikomba-notify-2026' },
+          body: JSON.stringify({
+            type: 'product_approved',
+            data: {
+              seller_email: sellerAuth.user.email,
+              seller_name: sellerProfile?.first_name || 'Seller',
+              product_name: product.name || product.title,
+              product_id,
+            }
+          })
+        }).catch(() => {})
+      }
+    } catch { /* non-blocking */ }
+  }
+
   return NextResponse.json({ success: true })
 }
 

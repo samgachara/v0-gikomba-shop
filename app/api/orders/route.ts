@@ -76,6 +76,27 @@ export async function POST(request: Request) {
     }
 
     if (!data) return fail('Order creation returned no data', 500)
+
+    // Fire order notifications (non-blocking)
+    try {
+      const { data: profile } = await supabase.from('profiles').select('first_name').eq('id', user.id).single()
+      const { data: authUser } = await supabase.auth.getUser()
+      await fetch('https://gikomba.shop/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-notify-secret': process.env.NOTIFY_SECRET || 'gikomba-notify-2026' },
+        body: JSON.stringify({
+          type: 'order_confirmed',
+          data: {
+            buyer_email: authUser?.data?.user?.email,
+            buyer_name: profile?.first_name || 'Buyer',
+            order_id: data,
+            product_name: 'your items',
+            total: body.total ?? 0,
+          }
+        })
+      }).catch(() => {})
+    } catch { /* non-blocking */ }
+
     return ok({ orderId: data }, 201)
   } catch (err) {
     console.error('[orders/POST] Unexpected error:', err)

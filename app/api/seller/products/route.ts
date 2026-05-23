@@ -79,5 +79,19 @@ export async function POST(request: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Notify admin a product needs review
+  try {
+    const { data: sellerRecord } = await supabase.from('sellers').select('store_name').eq('id', guard.user.id).single()
+    await fetch('https://gikomba.shop/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-notify-secret': process.env.NOTIFY_SECRET || 'gikomba-notify-2026' },
+      body: JSON.stringify({
+        type: 'product_pending_approval',
+        data: { product_name: data.name || data.title, store_name: sellerRecord?.store_name || 'A seller', product_id: data.id }
+      })
+    }).catch(() => {})
+  } catch { /* non-blocking */ }
+
   return NextResponse.json(data, { status: 201 })
 }

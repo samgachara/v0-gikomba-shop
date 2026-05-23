@@ -66,7 +66,7 @@ const fetcher = async (url: string) => {
   if (res.status === 401) return []
   if (!res.ok) throw new Error('Failed to fetch')
   const json = await res.json()
-  return Array.isArray(json) ? json : (json.data ?? [])
+  return Array.isArray(json) ? json : (json.items ?? json.data ?? [])
 }
 
 // ---------------------------------------------------------------------------

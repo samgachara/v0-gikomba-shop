@@ -63,6 +63,16 @@ export async function POST(request: Request) {
     await supabase.from('profiles').update({ role: 'seller' }).eq('id', user.id)
 
     logInfo('Seller registered', { seller_id: seller.id, store_name })
+
+    // Notify admin of new seller
+    try {
+      await fetch('https://gikomba.shop/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-notify-secret': process.env.NOTIFY_SECRET || 'gikomba-notify-2026' },
+        body: JSON.stringify({ type: 'new_seller_signup', data: { store_name, seller_email: user.email } })
+      }).catch(() => {})
+    } catch { /* non-blocking */ }
+
     return NextResponse.json(seller, { status: 201 })
   } catch (error) {
     return handleError(error)
