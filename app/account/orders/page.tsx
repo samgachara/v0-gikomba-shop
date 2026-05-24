@@ -185,7 +185,10 @@ export default function OrdersPage() {
                         <p className="text-sm text-muted-foreground">
                           {order.shipping_city}{order.shipping_address ? `, ${order.shipping_address}` : ''}
                         </p>
-                        <p className="font-semibold">{fmt(order.total)}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{fmt(order.total)}</p>
+                          <Link href={`/account/orders/${order.id}`} className="text-xs text-primary hover:underline font-medium">Track Order →</Link>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

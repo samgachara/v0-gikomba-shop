@@ -102,8 +102,14 @@ export default function SellerStorePage() {
             {seller.description && (
               <p className="text-sm text-muted-foreground mb-4">{seller.description}</p>
             )}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <Badge variant="outline">{activeProducts.length} product{activeProducts.length !== 1 ? 's' : ''}</Badge>
+              {seller.rating > 0 && (
+                <span className="inline-flex items-center gap-1 text-sm font-medium">
+                  {'★'.repeat(Math.round(seller.rating))}{'☆'.repeat(5 - Math.round(seller.rating))}
+                  <span className="text-muted-foreground ml-1">{seller.rating.toFixed(1)} ({seller.num_reviews} review{seller.num_reviews !== 1 ? 's' : ''})</span>
+                </span>
+              )}
               <a
                 href={`https://wa.me/${waNumber}?text=${waMsg}`}
                 target="_blank"
