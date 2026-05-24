@@ -97,6 +97,14 @@ export async function POST(request: Request) {
       }).catch(() => {})
     } catch { /* non-blocking */ }
 
+    // Reward referrer on first purchase (non-blocking)
+    try {
+      await supabase.rpc('reward_referral_on_purchase', {
+        p_buyer_id: user.id,
+        p_order_id: data,
+      })
+    } catch { /* non-blocking */ }
+
     return ok({ orderId: data }, 201)
   } catch (err) {
     console.error('[orders/POST] Unexpected error:', err)

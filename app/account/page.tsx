@@ -228,6 +228,7 @@ export default function AccountPage() {
                     <CardContent className="p-0">
                       {[
                         { label: 'View all orders',         sub: 'Track your purchases',         href: '/account/orders',  icon: Package },
+                        { label: 'Refer & Earn',              sub: 'Earn KSh 100 per referral',    href: '/account/referral', icon: Gift },
                         { label: 'My wishlist',             sub: 'Products you saved',           href: '/wishlist',        icon: Heart },
                         { label: 'Browse new arrivals',     sub: 'Shop the latest items',        href: '/shop?filter=new', icon: Star },
                         { label: 'Contact support',         sub: 'Get help with your orders',    tab: 'support',           icon: HeadphonesIcon },

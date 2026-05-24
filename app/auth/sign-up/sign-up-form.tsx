@@ -24,6 +24,7 @@ export function SignUpForm() {
   const [role, setRole] = useState<'buyer' | 'seller'>(
     searchParams.get('role') === 'seller' ? 'seller' : 'buyer'
   )
+  const [refCode, setRefCode] = useState(searchParams.get('ref') ?? '')
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
@@ -77,6 +78,7 @@ export function SignUpForm() {
             last_name: result.data.lastName,
             phone: result.data.phone,
             role,
+            ref_code: refCode.trim().toUpperCase() || null,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -279,6 +281,26 @@ export function SignUpForm() {
               {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating account...</> : `Create ${role === 'seller' ? 'Seller' : 'Buyer'} Account`}
             </Button>
           </form>
+
+          {/* Referral code */}
+          <div className="mt-4">
+            <details className="group">
+              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground text-center list-none">
+                Have a referral code? <span className="text-primary underline">Enter it here</span>
+              </summary>
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. AB12CD34"
+                  value={refCode}
+                  onChange={e => setRefCode(e.target.value.toUpperCase())}
+                  maxLength={8}
+                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              {refCode.length === 8 && <p className="text-xs text-green-600 mt-1 text-center">✓ Code applied — your friend earns KSh 100 when you make your first purchase</p>}
+            </details>
+          </div>
 
           <p className="mt-4 text-xs text-center text-muted-foreground">
             By creating an account, you agree to our{' '}
