@@ -2,6 +2,16 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
+  // ── Lowercase redirect ────────────────────────────────────────────────────
+  // If the URL path has uppercase letters, redirect to lowercase.
+  // Prevents 404s when users type Gikomba.shop or share capitalised links.
+  const { pathname, search, origin } = request.nextUrl
+  if (pathname !== pathname.toLowerCase()) {
+    return NextResponse.redirect(
+      new URL(origin + pathname.toLowerCase() + search)
+    )
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ecrttmokkmaqdlsxhlvv.supabase.co'
