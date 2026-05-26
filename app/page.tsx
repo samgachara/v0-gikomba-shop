@@ -1,4 +1,7 @@
 import { Header } from "@/components/header"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 export const metadata = {
   title: 'gikomba.shop — Kenya\'s Trusted Online Marketplace',
   description: 'Buy and sell quality products online in Kenya. M-Pesa payments, verified sellers, 7-day returns and delivery to all 47 counties. Shop fashion, electronics, home goods and more.',
