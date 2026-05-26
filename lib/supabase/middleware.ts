@@ -39,7 +39,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { pathname } = request.nextUrl
 
   // ── Fetch role from profiles if user is logged in ──────────────────────────
   let role: string | null = null
