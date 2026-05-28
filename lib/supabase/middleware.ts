@@ -40,15 +40,26 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
 
-  // ── Fetch role from profiles if user is logged in ──────────────────────────
+  // ── Fetch role from profiles (cached in cookie for 5 mins) ────────────────
   let role: string | null = null
   if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    role = profile?.role ?? null
+    // Check cookie cache first — avoids a DB hit on every single request
+    const cachedRole = request.cookies.get('_role')?.value
+    if (cachedRole) {
+      role = cachedRole
+    } else {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      role = profile?.role ?? null
+      // Cache role in cookie for 5 minutes
+      if (role) supabaseResponse.cookies.set('_role', role, { maxAge: 300, path: '/', sameSite: 'lax' })
+    }
+  } else {
+    // Clear role cookie on logout
+    supabaseResponse.cookies.delete('_role')
   }
 
   // ── Admin: locked to your email only ──────────────────────────────────────
