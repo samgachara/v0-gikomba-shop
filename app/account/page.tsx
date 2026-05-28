@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import {
   User, Package, Heart, LogOut, Loader2,
   MapPin, Phone, Mail, ShoppingBag, Star,
-  HeadphonesIcon, ChevronRight, CheckCircle,
+  HeadphonesIcon, ChevronRight, CheckCircle, Gift,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
