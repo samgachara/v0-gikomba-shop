@@ -291,6 +291,22 @@ export default function SellerDashboardPage() {
           {/* ── OVERVIEW ── */}
           {tab === 'overview' && (
             <div className="space-y-6">
+              {/* Store name warning banner */}
+              {profile?.store_name && (profile.store_name.endsWith("'s Shop") || profile.store_name.endsWith("'s Store")) && profile.store_name.charAt(0) === profile.store_name.charAt(0).toLowerCase() && (
+                <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-xl flex items-start gap-3">
+                  <span className="text-lg flex-shrink-0">⚠️</span>
+                  <div className="flex-1">
+                    <p className="font-medium text-yellow-800 dark:text-yellow-400 text-sm">Your store name needs updating</p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-500 mt-0.5">
+                      <strong>{profile.store_name}</strong> was auto-generated. Give your store a real name that buyers will trust.
+                    </p>
+                  </div>
+                  <button onClick={() => setActiveTab('profile')} className="text-xs font-medium text-yellow-800 dark:text-yellow-400 underline flex-shrink-0 mt-0.5">
+                    Update Now
+                  </button>
+                </div>
+              )}
+
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   { label: 'Total Sales',     value: stats ? fmt(stats.totalSales) : '—',    icon: TrendingUp, sub: 'From completed orders' },
