@@ -17,6 +17,7 @@ export default function ContactPage() {
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', subject: '', message: ''
   })
+  const [honeypot, setHoneypot] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -24,6 +25,8 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Honeypot — bots fill hidden fields, humans don't
+    if (honeypot) { setSent(true); return }
     setLoading(true)
     setError('')
     try {
@@ -114,6 +117,8 @@ export default function ContactPage() {
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Honeypot — hidden from real users, bots fill it */}
+                    <input type="text" name="website" value={honeypot} onChange={e => setHoneypot(e.target.value)} style={{display:'none'}} tabIndex={-1} autoComplete="off" />
                     <h2 className="text-xl font-semibold mb-4">Send a message</h2>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
