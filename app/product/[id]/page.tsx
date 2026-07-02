@@ -122,7 +122,7 @@ export default function ProductDetailPage() {
       ? window.location.href
       : `https://gikomba.shop/product/${id}`
     const message = encodeURIComponent(
-      `Hi! 👋 I'm interested in *${productName}* (KSh ${product.price?.toLocaleString()}) on gikomba.shop.\n\n${productUrl}\n\nIs it available?`
+      `Hi, I saw *${productName}* for KSh ${product.price?.toLocaleString()} on gikomba.shop — is it still available?\n${productUrl}`
     )
     window.open(`https://wa.me/${number}?text=${message}`, '_blank')
   }
