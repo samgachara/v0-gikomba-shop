@@ -15,13 +15,21 @@ const BLOG_SLUGS = [
 ]
 
 async function supabaseGet(path: string) {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-      next: { revalidate: 3600 },
-    })
-    return res.ok ? res.json() : []
-  } catch { return [] }
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Accept': 'application/json',
+        },
+        cache: 'no-store',
+      })
+      if (res.ok) return res.json()
+      if (attempt === 0) await new Promise(r => setTimeout(r, 500)) // retry after 500ms
+    } catch { if (attempt === 1) return [] }
+  }
+  return []
 }
 
 export async function GET() {
