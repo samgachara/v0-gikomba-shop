@@ -424,7 +424,7 @@ export default function AdminDashboardPage() {
                             {seller.verified && <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full"><ShieldCheck className="h-3 w-3"/>Verified</span>}
                             {pill(seller.status)}
                           </div>
-                          {seller.profiles && <p className="text-sm text-muted-foreground">{[seller.profiles.first_name,seller.profiles.last_name].filter(Boolean).join(' ')}{seller.profiles.phone && ` · ${seller.profiles.phone}`}</p>}
+                          {seller.profiles && <p className="text-sm text-muted-foreground">{[seller.profiles.first_name,seller.profiles.last_name].filter(Boolean).join(' ')}{(seller.phone || seller.profiles.phone) && ` · ${seller.phone || seller.profiles.phone}`}</p>}
                           <p className="text-xs text-muted-foreground mt-1">Joined {new Date(seller.created_at).toLocaleDateString()}</p>
                         </div>
                         <div className="flex gap-2 flex-wrap">
@@ -513,7 +513,7 @@ export default function AdminDashboardPage() {
                         </div>
                         <div className="flex flex-col gap-2">
                           {payout.status === 'pending' && <Button size="sm" variant="outline" className="text-xs gap-1 text-blue-700 border-blue-300 hover:bg-blue-50" disabled={actionId===payout.id} onClick={() => payoutAction(payout.id,'processing')}>{actionId===payout.id?<Loader2 className="h-3 w-3 animate-spin"/>:<Clock className="h-3 w-3"/>}Process</Button>}
-                          {payout.status === 'processing' && <Button size="sm" variant="outline" className="text-xs gap-1 text-green-700 border-green-300 hover:bg-green-50" disabled={actionId===payout.id} onClick={() => { const r=prompt('M-Pesa receipt:'); if(r) payoutAction(payout.id,'paid',r) }}>{actionId===payout.id?<Loader2 className="h-3 w-3 animate-spin"/>:<CheckCircle className="h-3 w-3"/>}Mark Paid</Button>}
+                          {payout.status === 'processing' && <Button size="sm" variant="outline" className="text-xs gap-1 text-green-700 border-green-300 hover:bg-green-50" disabled={actionId===payout.id} onClick={() => { const r=window.prompt('M-Pesa receipt number (e.g. QHX123ABC):'); if(r?.trim()) payoutAction(payout.id,'paid',r.trim()) }}>{actionId===payout.id?<Loader2 className="h-3 w-3 animate-spin"/>:<CheckCircle className="h-3 w-3"/>}Mark Paid</Button>}
                         </div>
                       </div>
                     </CardContent>

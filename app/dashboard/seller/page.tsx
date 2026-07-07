@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,7 +10,7 @@ import {
   Package, ShoppingBag, TrendingUp, LogOut, Loader2,
   Plus, Trash2, AlertCircle, CheckCircle, X, Pencil,
   DollarSign, BarChart2, Bell, ArrowRight, Banknote,
-  Clock, Truck, PackageCheck,
+  Clock, Truck, PackageCheck, ShieldCheck,
 } from 'lucide-react'
 import { Button }   from '@/components/ui/button'
 import { Input }    from '@/components/ui/input'
@@ -111,11 +112,79 @@ const NEXT_STATUS: Record<string, { label: string; next: string; icon: React.Rea
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+
+// ── Profile Form Component ────────────────────────────────────────────────────
+function ProfileForm({ profile, onSaved }: { profile: any; onSaved: (updated: any) => void }) {
+  const [form, setForm] = React.useState({
+    store_name:  profile?.store_name  ?? '',
+    description: profile?.description ?? '',
+    phone:       profile?.phone        ?? '',
+    location:    profile?.location     ?? '',
+  })
+  const [saving, setSaving] = React.useState(false)
+  const [saved,  setSaved]  = React.useState(false)
+  const [error,  setError]  = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    setForm({
+      store_name:  profile?.store_name  ?? '',
+      description: profile?.description ?? '',
+      phone:       profile?.phone        ?? '',
+      location:    profile?.location     ?? '',
+    })
+  }, [profile?.store_name, profile?.description, profile?.phone, profile?.location])
+
+  const handleSave = async () => {
+    if (!form.store_name.trim()) { setError('Store name is required'); return }
+    setSaving(true); setError(null)
+    try {
+      const res = await fetch('/api/seller/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Failed to save'); return }
+      onSaved(form)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch { setError('Network error') }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className="space-y-4">
+      {error && <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm">{error}</div>}
+      <div className="space-y-2">
+        <Label htmlFor="store_name">Store Name *</Label>
+        <Input id="store_name" value={form.store_name} onChange={e => setForm(f => ({ ...f, store_name: e.target.value }))} placeholder="e.g. Nairobi Fashion Hub" />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">Store Description</Label>
+        <Textarea id="description" rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Tell buyers what you sell..." />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="phone">WhatsApp / M-Pesa Number *</Label>
+        <Input id="phone" type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="0712 345 678" />
+        <p className="text-xs text-muted-foreground">Buyers use this to contact you. Required for payouts.</p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="location">Location</Label>
+        <Input id="location" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="e.g. Nairobi, Kenya" />
+      </div>
+      <Button onClick={handleSave} disabled={saving} className="gap-2">
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? '✓ Saved' : null}
+        {saved ? 'Saved!' : saving ? 'Saving...' : 'Save Changes'}
+      </Button>
+    </div>
+  )
+}
+
 export default function SellerDashboardPage() {
   const { user, loading: authLoading, signOut } = useAuth()
   const router = useRouter()
 
-  const [tab,         setTab]         = useState<'overview' | 'products' | 'orders' | 'earnings'>('overview')
+  const [tab,         setTab]         = useState<'overview' | 'products' | 'orders' | 'earnings' | 'profile'>('overview')
   const [profile,     setProfile]     = useState<{ first_name: string | null } | null>(null)
   const [stats,       setStats]       = useState<Stats | null>(null)
   const [products,    setProducts]    = useState<Product[]>([])
@@ -236,7 +305,17 @@ export default function SellerDashboardPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold">Seller Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Welcome back, {profile?.first_name ?? 'Seller'}</p>
+              <p className="text-muted-foreground mt-1 flex items-center gap-2">
+                Welcome back, {profile?.first_name ?? 'Seller'}
+                {profile?.verified && (
+                  <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-full font-medium">
+                    <ShieldCheck className="h-3 w-3" /> Verified Seller
+                  </span>
+                )}
+                {profile?.store_name && (
+                  <span className="text-xs text-muted-foreground">· {profile.store_name}</span>
+                )}
+              </p>
             </div>
             <Button variant="ghost" className="gap-2 text-destructive hover:text-destructive" onClick={signOut}>
               <LogOut className="h-4 w-4" />Sign Out
@@ -273,7 +352,7 @@ export default function SellerDashboardPage() {
 
           {/* Tabs */}
           <div className="flex gap-1 mb-8 border-b border-border overflow-x-auto">
-            {(['overview', 'products', 'orders', 'earnings'] as const).map(t => (
+            {(['overview', 'products', 'orders', 'earnings', 'profile'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-5 py-2.5 text-sm font-medium capitalize transition-colors border-b-2 -mb-px whitespace-nowrap ${
                   tab === t ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -301,7 +380,7 @@ export default function SellerDashboardPage() {
                       <strong>{profile.store_name}</strong> was auto-generated. Give your store a real name that buyers will trust.
                     </p>
                   </div>
-                  <button onClick={() => setActiveTab('profile')} className="text-xs font-medium text-yellow-800 dark:text-yellow-400 underline flex-shrink-0 mt-0.5">
+                  <button onClick={() => setTab('profile')} className="text-xs font-medium text-yellow-800 dark:text-yellow-400 underline flex-shrink-0 mt-0.5">
                     Update Now
                   </button>
                 </div>
@@ -536,8 +615,15 @@ export default function SellerDashboardPage() {
                               </div>
                             ))}
                           </div>
-                          <div className="text-xs text-muted-foreground border-t pt-3 mb-3">
-                            <span className="font-medium">Deliver to:</span> {order.shipping_address}, {order.shipping_city} · {order.phone}
+                          <div className="text-xs text-muted-foreground border-t pt-3 mb-3 flex flex-wrap items-center gap-3">
+                            <span><span className="font-medium">Deliver to:</span> {order.shipping_address}{order.shipping_city ? `, ${order.shipping_city}` : ''}</span>
+                            {order.phone && (
+                              <a href={`https://wa.me/${order.phone.replace(/^0/, '254').replace(/\+/,'')}`}
+                                target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-green-700 font-medium hover:underline">
+                                📱 {order.phone}
+                              </a>
+                            )}
                           </div>
                           {nextAction && order.payment_status === 'completed' && (
                             <Button size="sm" variant="outline" className="gap-2 text-xs" disabled={updatingOrderId === order.id} onClick={() => handleOrderStatusUpdate(order.id, nextAction.next)}>

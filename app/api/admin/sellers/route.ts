@@ -17,7 +17,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('sellers')
     .select(`
-      id, store_name, status, verified, created_at,
+      id, store_name, status, verified, created_at, phone, location, description,
       profiles ( first_name, last_name, phone )
     `)
     .order('created_at', { ascending: false })
