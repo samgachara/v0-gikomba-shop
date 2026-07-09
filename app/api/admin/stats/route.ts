@@ -44,6 +44,7 @@ export async function GET() {
     totalOrders:    ordersRes.count   ?? 0,
     pendingOrders,
     totalRevenue,
+    pendingPayouts: (await supabase.from('seller_payouts').select('amount', {count:'exact'}).eq('status','pending')).count ?? 0,
     roleBreakdown,
     recentOrders:   recentOrdersRes.data ?? [],
     topProducts:    [],

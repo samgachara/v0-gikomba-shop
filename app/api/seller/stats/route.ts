@@ -28,9 +28,9 @@ export async function GET() {
   const { data: orders } = await supabase
     .from('orders').select('id, status, total').in('id', orderIds)
 
-  const deliveredOrders = (orders ?? []).filter(o => o.status === 'delivered')
+  const deliveredOrders = (orders ?? []).filter(o => ['confirmed','processing','shipped','delivered'].includes(o.status))
   const totalSales     = deliveredOrders.reduce((sum, o) => sum + Number(o.total), 0)
-  const pendingOrders  = (orders ?? []).filter(o => o.status === 'pending').length
+  const pendingOrders  = (orders ?? []).filter(o => ['pending','confirmed'].includes(o.status)).length
   const totalOrders    = orders?.length ?? 0
   const avgOrderValue  = deliveredOrders.length > 0
     ? Math.round(totalSales / deliveredOrders.length)

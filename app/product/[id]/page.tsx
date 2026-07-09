@@ -47,6 +47,8 @@ export default function ProductDetailPage() {
   const [isAdmin,    setIsAdmin]    = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const [related, setRelated] = useState<any[]>([])
+
   // Review form
   const [showReviewForm,   setShowReviewForm]   = useState(false)
   const [reviewRating,     setReviewRating]     = useState(5)
@@ -71,6 +73,14 @@ export default function ProductDetailPage() {
     if (!productData) { router.push('/shop'); return }
     setProduct(productData)
     setReviews(reviewsData ?? [])
+
+    // Fetch related products from same category
+    if (productData?.category) {
+      fetch(`/api/products?category=${encodeURIComponent(productData.category)}&limit=4`)
+        .then(r => r.json())
+        .then(d => setRelated((d?.products ?? []).filter((p: any) => p.id !== id)))
+        .catch(() => {})
+    }
 
     if (productData.seller_id) {
       // FIX: include phone so WhatsApp routes to the actual seller
@@ -193,12 +203,23 @@ export default function ProductDetailPage() {
       <Header />
       <main className="pt-24 pb-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" /> Back to shop
-          </button>
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+            <ChevronLeft className="h-3 w-3 rotate-180" />
+            <Link href="/shop" className="hover:text-foreground transition-colors">Shop</Link>
+            {product.category && (
+              <>
+                <ChevronLeft className="h-3 w-3 rotate-180" />
+                <Link href={`/shop?category=${encodeURIComponent(product.category)}`}
+                  className="hover:text-foreground transition-colors capitalize">{product.category}</Link>
+              </>
+            )}
+            <ChevronLeft className="h-3 w-3 rotate-180" />
+            <span className="text-foreground font-medium line-clamp-1 max-w-[200px]">
+              {product.name || product.title}
+            </span>
+          </nav>
 
           <div className="lg:grid lg:grid-cols-2 lg:gap-x-12">
             {/* Image */}
@@ -302,6 +323,23 @@ export default function ProductDetailPage() {
               <p className="text-xs text-center text-muted-foreground mt-1">
                 Chat directly with the seller · Usually replies within minutes
               </p>
+
+              {/* Share button */}
+              <button
+                onClick={() => {
+                  const url = window.location.href
+                  const text = `Check out ${product.name || product.title} for KSh ${Number(product.price).toLocaleString()} on gikomba.shop`
+                  if (navigator.share) {
+                    navigator.share({ title: product.name || product.title, text, url }).catch(() => {})
+                  } else {
+                    navigator.clipboard.writeText(url)
+                    toast.success('Link copied to clipboard!')
+                  }
+                }}
+                className="w-full mt-2 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg py-2.5 transition-colors"
+              >
+                <Share2 className="h-4 w-4" /> Share this product
+              </button>
 
               {/* Trust badges */}
               <div className="mt-10 grid grid-cols-3 gap-4 border-t border-border pt-8">
@@ -440,6 +478,28 @@ export default function ProductDetailPage() {
           </div>
 
         </div>
+        {/* Related Products */}
+        {related.length > 0 && (
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 border-t border-border">
+            <h2 className="text-xl font-bold mb-6">More from this category</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {related.map(p => (
+                <Link key={p.id} href={`/product/${p.id}`}
+                  className="group rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow bg-card">
+                  <div className="relative aspect-square overflow-hidden">
+                    <Image src={p.image_url || '/placeholder.jpg'} alt={p.name || p.title}
+                      fill className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="25vw" />
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm font-medium line-clamp-1">{p.name || p.title}</p>
+                    <p className="text-sm font-bold text-primary mt-0.5">KSh {Number(p.price).toLocaleString()}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
     </>
   )
