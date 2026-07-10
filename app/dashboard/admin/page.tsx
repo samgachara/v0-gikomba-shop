@@ -315,6 +315,13 @@ export default function AdminDashboardPage() {
                             {new Date(order.created_at).toLocaleString('en-KE')} · {order.shipping_city} · {order.phone}
                           </p>
                           {order.buyer && <p className="text-xs text-muted-foreground">{order.buyer.first_name} {order.buyer.last_name}</p>}
+                          <div className="flex gap-2 mt-2 flex-wrap">
+                            {order.status === 'pending'    && <Button size="sm" variant="outline" className="text-xs h-7 text-blue-700 border-blue-300" onClick={() => orderAction(order.id,'confirmed')}>Confirm</Button>}
+                            {order.status === 'confirmed'  && <Button size="sm" variant="outline" className="text-xs h-7 text-purple-700 border-purple-300" onClick={() => orderAction(order.id,'processing')}>Mark Packing</Button>}
+                            {order.status === 'processing' && <Button size="sm" variant="outline" className="text-xs h-7 text-orange-700 border-orange-300" onClick={() => orderAction(order.id,'shipped')}>Mark Shipped</Button>}
+                            {order.status === 'shipped'    && <Button size="sm" variant="outline" className="text-xs h-7 text-green-700 border-green-300" onClick={() => orderAction(order.id,'delivered')}>Mark Delivered</Button>}
+                            {order.payment_status === 'pending' && <Button size="sm" variant="outline" className="text-xs h-7 text-green-700 border-green-300" onClick={() => orderAction(order.id, undefined,'paid')}>Mark Paid</Button>}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                           {pill(order.status)} {pill(order.payment_status)}
@@ -383,9 +390,27 @@ export default function AdminDashboardPage() {
                           <p className="text-sm font-semibold mt-0.5">{fmt(product.price)}</p>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0 flex-wrap justify-end">
-                          <Button size="sm" variant="ghost" className="text-xs h-8 gap-1" title={product.is_active ? 'Deactivate' : 'Approve & Publish'} disabled={actionId===product.id} onClick={() => productAction(product.id, { is_active: !product.is_active })}>
-                            {actionId===product.id ? <Loader2 className="h-3.5 w-3.5 animate-spin"/> : product.is_active ? <ToggleRight className="h-4 w-4 text-green-600"/> : <ToggleLeft className="h-4 w-4 text-gray-400"/>}
-                          </Button>
+                          {!product.is_active && (
+                            <Button size="sm" variant="outline" className="text-xs h-8 gap-1 text-green-700 border-green-300 hover:bg-green-50" disabled={actionId===product.id} onClick={() => productAction(product.id, { is_active: true })}>
+                              {actionId===product.id ? <Loader2 className="h-3.5 w-3.5 animate-spin"/> : <CheckCircle className="h-3.5 w-3.5"/>} Approve
+                            </Button>
+                          )}
+                          {!product.is_active && (
+                            <Button size="sm" variant="outline" className="text-xs h-8 gap-1 text-red-700 border-red-300 hover:bg-red-50" disabled={actionId===product.id} onClick={() => {
+                              const reason = window.prompt('Reason for rejection (shown to seller):')
+                              if (reason !== null) {
+                                productAction(product.id, { is_active: false })
+                                fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-notify-secret': 'gikomba-notify-2026' }, body: JSON.stringify({ type: 'product_rejected', data: { seller_email: product.seller?.email, seller_name: product.seller?.store_name, product_name: product.name, reason } }) }).catch(()=>{})
+                              }
+                            }}>
+                              {actionId===product.id ? <Loader2 className="h-3.5 w-3.5 animate-spin"/> : <X className="h-3.5 w-3.5"/>} Reject
+                            </Button>
+                          )}
+                          {product.is_active && (
+                            <Button size="sm" variant="ghost" className="text-xs h-8 gap-1" title="Deactivate" disabled={actionId===product.id} onClick={() => productAction(product.id, { is_active: false })}>
+                              {actionId===product.id ? <Loader2 className="h-3.5 w-3.5 animate-spin"/> : <ToggleRight className="h-4 w-4 text-green-600"/>}
+                            </Button>
+                          )}
                           <Button size="sm" variant="ghost" className="text-xs h-8 gap-1" title={product.is_featured ? 'Unfeature' : 'Feature'} disabled={actionId===product.id} onClick={() => productAction(product.id, { is_featured: !product.is_featured })}>
                             <Star className={`h-4 w-4 ${product.is_featured ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
                           </Button>
